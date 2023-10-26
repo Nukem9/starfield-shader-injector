@@ -1,0 +1,29 @@
+{
+  "version": "0.2.1",
+  "defaults": {},
+  "configurations": [
+    {
+      "isDefaultConfiguration": true,
+      "noDebug": true,
+      "type": "dll",
+      "name": "CMakeLists.txt",
+      "project": "CMakeLists.txt",
+      "projectTarget": "",
+      "currentDir": "${env.GAME_ROOT_DIRECTORY}",
+      "exe": "cmd.exe",
+      "args": [
+        "/C \"${env.GAME_ROOT_DIRECTORY}/sfse_loader.exe\" && taskkill /F /IM VsDebugConsole.exe"
+      ],
+      "environment": [
+        {
+          "name": "SFSE_DEBUGGER_REQUEST",
+          "value": "${env.SFSE_DEBUGGER_REQUEST}"
+        },
+        {
+          "name": "SFSE_DEBUGGER_PROC",
+          "value": "${env.SFSE_DEBUGGER_PROC}"
+        }
+      ]
+    }
+  ]
+}

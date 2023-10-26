@@ -1,0 +1,14 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "config-envvars",
+      "hidden": true,
+      "environment": {
+        "GAME_ROOT_DIRECTORY": "C:/Program Files (x86)/Steam/steamapps/common/Starfield",
+        "SFSE_DEBUGGER_REQUEST": "vsjitdebugger.exe -p ",
+        "SFSE_DEBUGGER_PROC": "kernel32!CreateProcessA"
+      }
+    }
+  ]
+}

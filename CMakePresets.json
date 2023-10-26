@@ -1,0 +1,101 @@
+{
+  "version": 6,
+  "include": [
+    "CMakeUserEnvVars.json"
+  ],
+  "configurePresets": [
+    {
+      "name": "config-base-vcpkg",
+      "hidden": true,
+      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "x64-windows-static-md"
+      }
+    },
+    {
+      "name": "config-base-cmake",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/bin/${presetName}",
+      "cacheVariables": {
+        "CMAKE_CONFIGURATION_TYPES": "Debug;Release",
+        "CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE": "TRUE"
+      }
+    },
+    {
+      "name": "config-base-ninja",
+      "hidden": true,
+      "generator": "Ninja Multi-Config",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS": "/MP /diagnostics:caret",
+        "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL"
+      }
+    },
+    {
+      "name": "config-base-msvc2022",
+      "hidden": true,
+      "generator": "Visual Studio 17 2022",
+      "architecture": {
+        "value": "x64"
+      },
+      "inherits": [
+        "config-base-ninja"
+      ]
+    },
+    {
+      "name": "sfse",
+      "cacheVariables": {
+        "BUILD_FOR_SFSE": "TRUE",
+        "BUILD_FOR_ASILOADER": "FALSE"
+      },
+      "inherits": [
+        "config-base-vcpkg",
+        "config-base-cmake",
+        "config-base-ninja",
+        "config-envvars"
+      ]
+    },
+    {
+      "name": "asiloader",
+      "cacheVariables": {
+        "BUILD_FOR_SFSE": "FALSE",
+        "BUILD_FOR_ASILOADER": "TRUE"
+      },
+      "inherits": [
+        "config-base-vcpkg",
+        "config-base-cmake",
+        "config-base-ninja",
+        "config-envvars"
+      ]
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "sfse-debug",
+      "configurePreset": "sfse",
+      "configuration": "Debug",
+      "displayName": "SFSE Debug"
+    },
+    {
+      "name": "sfse-release",
+      "configurePreset": "sfse",
+      "configuration": "Release",
+      "displayName": "SFSE Release"
+    },
+    {
+      "name": "asi-debug",
+      "configurePreset": "asiloader",
+      "configuration": "Debug",
+      "displayName": "ASI Debug"
+    },
+    {
+      "name": "asi-release",
+      "configurePreset": "asiloader",
+      "configuration": "Release",
+      "displayName": "ASI Release"
+    }
+  ]
+}
