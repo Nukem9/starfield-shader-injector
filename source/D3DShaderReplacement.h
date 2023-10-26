@@ -1,0 +1,12 @@
+#pragma once
+
+#include "D3DPipelineStateStream.h"
+
+struct ID3D12Device2;
+
+namespace D3DShaderReplacement
+{
+	const std::filesystem::path& GetShaderBinDirectory();
+
+	bool PatchPipelineStateStream(D3D12PipelineStateStream::Copy& StreamCopy, ID3D12Device2 *Device, const std::span<const uint8_t> *RootSignatureData, const char *TechniqueName, uint64_t TechniqueId);
+}
