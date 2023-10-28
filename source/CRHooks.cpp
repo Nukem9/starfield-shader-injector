@@ -19,7 +19,10 @@ namespace CRHooks
 
 	void LiveUpdateFilesystemWatcherThread(CComPtr<ID3D12Device2> Device)
 	{
-		const auto changeHandle = FindFirstChangeNotificationW(D3DShaderReplacement::GetShaderBinDirectory().c_str(), true, FILE_NOTIFY_CHANGE_LAST_WRITE);
+		const auto changeHandle = FindFirstChangeNotificationW(
+			D3DShaderReplacement::GetShaderBinDirectory().c_str(),
+			true,
+			FILE_NOTIFY_CHANGE_LAST_WRITE);
 
 		if (changeHandle == INVALID_HANDLE_VALUE)
 		{
@@ -57,7 +60,11 @@ namespace CRHooks
 					CComPtr<ID3D12PipelineState> pipelineState;
 					if (auto hr = Device->CreatePipelineState(data.StreamCopy.GetDesc(), IID_PPV_ARGS(&pipelineState)); FAILED(hr))
 					{
-						spdlog::error("Live update: Failed to compile pipeline: {:X}. Shader technique: {:X}.", static_cast<uint32_t>(hr), data.Technique->m_Id);
+						spdlog::error(
+							"Live update: Failed to compile pipeline: {:X}. Shader technique: {:X}.",
+							static_cast<uint32_t>(hr),
+							data.Technique->m_Id);
+
 						continue;
 					}
 
@@ -121,8 +128,7 @@ namespace CRHooks
 			}();
 
 			std::scoped_lock lock(TrackedShaderDataLock);
-			TrackedPipelineData.emplace_back(TrackedDataEntry
-			{
+			TrackedPipelineData.emplace_back(TrackedDataEntry {
 				.Technique = Technique,
 				.StreamCopy = std::move(StreamCopy),
 			});
@@ -160,7 +166,8 @@ namespace CRHooks
 
 		if (updateRequired)
 		{
-			const auto type = *reinterpret_cast<CreationRenderer::ShaderType *>(reinterpret_cast<uintptr_t>(TargetLayout->m_LayoutConfigurationData) + 0x4);
+			const auto type = *reinterpret_cast<CreationRenderer::ShaderType *>(
+				reinterpret_cast<uintptr_t>(TargetLayout->m_LayoutConfigurationData) + 0x4);
 
 			switch (type)
 			{
@@ -189,11 +196,11 @@ namespace CRHooks
 			Xbyak::Label emulateSetNewSignature;
 
 			lea(r9, ptr[rsi + 0x8]);
-			mov(ptr[rsp + 0x20], r9);	// a5: Target Technique**
-			mov(r9, r15);				// a4: Current Technique**
-			mov(r8, r13);				// a3: Target PipelineLayoutDx12
-			mov(rdx, ptr[rcx + 0x18]);	// a2: Current PipelineLayoutDx12
-			mov(rcx, ptr[r14 + 0x10]);	// a1: ID3D12GraphicsCommandList
+			mov(ptr[rsp + 0x20], r9);  // a5: Target Technique**
+			mov(r9, r15);			   // a4: Current Technique**
+			mov(r8, r13);			   // a3: Target PipelineLayoutDx12
+			mov(rdx, ptr[rcx + 0x18]); // a2: Current PipelineLayoutDx12
+			mov(rcx, ptr[r14 + 0x10]); // a1: ID3D12GraphicsCommandList
 			mov(rax, reinterpret_cast<uintptr_t>(&OverridePipelineLayoutDx12));
 			call(rax);
 
@@ -219,7 +226,8 @@ namespace CRHooks
 
 	DECLARE_HOOK_TRANSACTION(CRHooks)
 	{
-		static SetPipelineLayoutDx12HookGen setPipelineLayoutDx12Hook(Offsets::Signature("4C 39 69 18 74 6D 41 8B C8 83 E9 01 74 41 83 E9 01 74 29 83 F9 01 74 24 41 8B C8 83 E9 01 74 40"));
+		static SetPipelineLayoutDx12HookGen setPipelineLayoutDx12Hook(
+			Offsets::Signature("4C 39 69 18 74 6D 41 8B C8 83 E9 01 74 41 83 E9 01 74 29 83 F9 01 74 24 41 8B C8 83 E9 01 74 40"));
 		setPipelineLayoutDx12Hook.Patch();
 	};
 }

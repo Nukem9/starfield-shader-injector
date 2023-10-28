@@ -7,7 +7,7 @@ namespace Hooks
 	struct CallbackEntry
 	{
 		const char *Name = nullptr;
-		std::variant<void(*)(), bool(*)()> Callback;
+		std::variant<void (*)(), bool (*)()> Callback;
 	};
 
 	struct HookTransactionEntry
@@ -58,7 +58,7 @@ namespace Hooks
 		{
 			spdlog::info("Setting up hooks for {}...", entry.Name);
 
-			const bool status = std::visit([](auto&& F)
+			auto visitor = [](auto&& F)
 			{
 				if constexpr (std::is_same_v<decltype(F()), void>)
 					return F(), true;
@@ -66,10 +66,10 @@ namespace Hooks
 					return F();
 				else
 					static_assert(!sizeof(decltype(F)), "Invalid callback type");
-			}, entry.Callback);
+			};
 
 			// Bail on the whole process when a callback returns false
-			if (!status)
+			if (!std::visit(visitor, entry.Callback))
 			{
 				DetourTransactionAbort();
 
@@ -139,7 +139,12 @@ namespace Hooks
 		return true;
 	}
 
-	bool RedirectImport(void *ModuleHandle, const char *ImportModuleName, std::variant<const char *, int> ImportName, const void *CallbackFunction, void **OriginalFunction)
+	bool RedirectImport(
+		void *ModuleHandle,
+		const char *ImportModuleName,
+		std::variant<const char *, int> ImportName,
+		const void *CallbackFunction,
+		void **OriginalFunction)
 	{
 		auto moduleCallback = [](PVOID Context, HMODULE, LPCSTR Name) -> BOOL
 		{
@@ -186,8 +191,7 @@ namespace Hooks
 			return true;
 		};
 
-		IATEnumContext context
-		{
+		IATEnumContext context {
 			.ModuleName = ImportModuleName,
 			.ImportName = ImportName,
 			.CallbackFunction = CallbackFunction,
@@ -204,19 +208,17 @@ namespace Hooks
 
 namespace Hooks::Impl
 {
-	TxnBase::TxnBase(void(*Initializer)(), const char *Name)
+	TxnBase::TxnBase(void (*Initializer)(), const char *Name)
 	{
-		GetInitializationEntries().emplace_back(CallbackEntry
-		{
+		GetInitializationEntries().emplace_back(CallbackEntry {
 			.Name = Name,
 			.Callback = Initializer,
 		});
 	}
 
-	TxnBase::TxnBase(bool(*Initializer)(), const char *Name)
+	TxnBase::TxnBase(bool (*Initializer)(), const char *Name)
 	{
-		GetInitializationEntries().emplace_back(CallbackEntry
-		{
+		GetInitializationEntries().emplace_back(CallbackEntry {
 			.Name = Name,
 			.Callback = Initializer,
 		});

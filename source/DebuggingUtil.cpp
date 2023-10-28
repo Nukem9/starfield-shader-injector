@@ -53,7 +53,8 @@ namespace DebuggingUtil
 			return;
 
 		Hooks::WriteJump(
-			Offsets::Signature("48 8B C4 4C 89 48 20 4C 89 40 18 48 89 50 10 48 89 48 08 53 56 57 41 54 41 55 41 56 41 57 48 81 EC 40 01 00 00"),
+			Offsets::Signature(
+				"48 8B C4 4C 89 48 20 4C 89 40 18 48 89 50 10 48 89 48 08 53 56 57 41 54 41 55 41 56 41 57 48 81 EC 40 01 00 00"),
 			&HookedCreateTexture,
 			&OriginalCreateTexture);
 

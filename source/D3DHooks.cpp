@@ -15,8 +15,8 @@ namespace D3DHooks
 	// many choices since we have to query multiple files on disk each time. 7000 pipelines * 8 shaders * 3 calls.
 	//
 	// Instead we get 7000 pipelines * 8 shaders * 1 call.
-	// 
-	// 
+	//
+	//
 	// This method returns an HRESULT success or error code, which can include E_INVALIDARG if the name doesn't
 	// exist or the stream description doesn't match the data in the library, and E_OUTOFMEMORY if the function
 	// is unable to allocate the resulting PSO.
@@ -25,7 +25,13 @@ namespace D3DHooks
 	thread_local CreationRenderer::TechniqueData *TLLastRequestedShaderTechnique;
 	thread_local wchar_t TLLastRequestedPipelineName[64];
 
-	HRESULT LoadPipelineForTechnique(ID3D12PipelineLibrary1 *Thisptr, LPCWSTR Name, const D3D12_PIPELINE_STATE_STREAM_DESC *Desc, REFIID Riid, void **PipelineState, CreationRenderer::TechniqueData *Tech)
+	HRESULT LoadPipelineForTechnique(
+		ID3D12PipelineLibrary1 *Thisptr,
+		LPCWSTR Name,
+		const D3D12_PIPELINE_STATE_STREAM_DESC *Desc,
+		REFIID Riid,
+		void **PipelineState,
+		CreationRenderer::TechniqueData *Tech)
 	{
 		TLLastRequestedPipelineLibrary = Thisptr;
 		TLLastRequestedShaderTechnique = Tech;
@@ -61,14 +67,18 @@ namespace D3DHooks
 	// Similar to LoadPipeline above, but for storing pipeline state. CreatePipelineStateForTechnique determines
 	// whether this gets called by setting TLNextShaderTechniqueToSkipCaching. We don't want modified shaders to
 	// be cached.
-	// 
-	// 
+	//
+	//
 	// This method returns an HRESULT success or error code, including E_INVALIDARG if the name already exists,
 	// E_OUTOFMEMORY if unable to allocate storage in the library.
 	//
 	thread_local CreationRenderer::TechniqueData *TLNextShaderTechniqueToSkipCaching;
 
-	HRESULT StorePipelineForTechnique(ID3D12PipelineLibrary1 *Thisptr, LPCWSTR Name, ID3D12PipelineState *Pipeline, CreationRenderer::TechniqueData *Tech)
+	HRESULT StorePipelineForTechnique(
+		ID3D12PipelineLibrary1 *Thisptr,
+		LPCWSTR Name,
+		ID3D12PipelineState *Pipeline,
+		CreationRenderer::TechniqueData *Tech)
 	{
 		if (TLNextShaderTechniqueToSkipCaching == Tech)
 		{
@@ -104,12 +114,17 @@ namespace D3DHooks
 
 	//
 	// Pipeline state object creation. This is the main hook where shader bytecode gets replaced.
-	// 
+	//
 	//
 	// This method returns E_OUTOFMEMORY if there is insufficient memory to create the pipeline state object.
 	// See Direct3D 12 Return Codes for other possible return values.
 	//
-	HRESULT CreatePipelineStateForTechnique(ID3D12Device2 *Thisptr, const D3D12_PIPELINE_STATE_STREAM_DESC *Desc, REFIID Riid, void **PipelineState, CreationRenderer::TechniqueData *Tech)
+	HRESULT CreatePipelineStateForTechnique(
+		ID3D12Device2 *Thisptr,
+		const D3D12_PIPELINE_STATE_STREAM_DESC *Desc,
+		REFIID Riid,
+		void **PipelineState,
+		CreationRenderer::TechniqueData *Tech)
 	{
 		if (Riid != __uuidof(ID3D12PipelineState))
 			return E_NOINTERFACE;
@@ -135,7 +150,8 @@ namespace D3DHooks
 		{
 			if (TLLastRequestedPipelineLibrary && TLLastRequestedShaderTechnique == Tech)
 			{
-				if (SUCCEEDED(TLLastRequestedPipelineLibrary->LoadPipeline(TLLastRequestedPipelineName, streamCopy.GetDesc(), Riid, PipelineState)))
+				if (SUCCEEDED(TLLastRequestedPipelineLibrary
+								  ->LoadPipeline(TLLastRequestedPipelineName, streamCopy.GetDesc(), Riid, PipelineState)))
 					shaderWasLoadedFromCache = true;
 			}
 		}
@@ -150,10 +166,14 @@ namespace D3DHooks
 
 			if (FAILED(hr))
 			{
-				spdlog::error("CreatePipelineState failed and returned {:X}. Shader technique: {:X}.", static_cast<uint32_t>(hr), Tech->m_Id);
+				spdlog::error(
+					"CreatePipelineState failed and returned {:X}. Shader technique: {:X}.",
+					static_cast<uint32_t>(hr),
+					Tech->m_Id);
 
 				if (hr == E_INVALIDARG)
-					spdlog::error("Please check that all custom shaders have matching input semantics, root signatures, and are digitally signed by dxc.exe.");
+					spdlog::error("Please check that all custom shaders have matching input semantics, root signatures, and are digitally "
+								  "signed by dxc.exe.");
 
 				return hr;
 			}
@@ -162,7 +182,12 @@ namespace D3DHooks
 		// Tech can't be used because it's allocated on the stack and quickly discarded. PipelineState is a
 		// pointer within another TechniqueData struct that's stored in a global array - a suitable alternative.
 		auto globalTech = reinterpret_cast<ptrdiff_t>(PipelineState) - offsetof(CreationRenderer::TechniqueData, m_PipelineState);
-		CRHooks::TrackCompiledTechnique(Thisptr, reinterpret_cast<CreationRenderer::TechniqueData *>(globalTech), std::move(streamCopy), shaderWasPatched);
+
+		CRHooks::TrackCompiledTechnique(
+			Thisptr,
+			reinterpret_cast<CreationRenderer::TechniqueData *>(globalTech),
+			std::move(streamCopy),
+			shaderWasPatched);
 
 		DebuggingUtil::SetObjectDebugName(static_cast<ID3D12PipelineState *>(*PipelineState), Tech->m_Name);
 		return S_OK;
@@ -192,16 +217,19 @@ namespace D3DHooks
 
 	DECLARE_HOOK_TRANSACTION(D3DHooks)
 	{
-		static LoadPipelineHookGen loadPipelineHook(Offsets::Signature("FF 50 68 85 C0 0F 89 ? ? ? ? 49 8B 8F A0 03 00 00 48 8B 01 4C 8B CF 4C 8D"));
+		static LoadPipelineHookGen loadPipelineHook(
+			Offsets::Signature("FF 50 68 85 C0 0F 89 ? ? ? ? 49 8B 8F A0 03 00 00 48 8B 01 4C 8B CF 4C 8D"));
 		loadPipelineHook.Patch();
 
 		static StorePipelineHookGen storePipelineHook(Offsets::Signature("FF 50 40 8B D8 85 C0 0F 89 ? ? ? ? 45 33 E4 4C 89 64 24 58"));
 		storePipelineHook.Patch();
 
-		static CreatePipelineStateHookGen createPipelineStateHook1(Offsets::Signature("FF 90 78 01 00 00 8B D8 41 BD FF FF FF FF 85 C0 0F 89 ? ? ? ? 33 C0"));
+		static CreatePipelineStateHookGen createPipelineStateHook1(
+			Offsets::Signature("FF 90 78 01 00 00 8B D8 41 BD FF FF FF FF 85 C0 0F 89 ? ? ? ? 33 C0"));
 		createPipelineStateHook1.Patch();
 
-		static CreatePipelineStateHookGen createPipelineStateHook2(Offsets::Signature("FF 90 78 01 00 00 8B D8 85 C0 0F 89 ? ? ? ? 4C 89 6C 24 68"));
+		static CreatePipelineStateHookGen createPipelineStateHook2(
+			Offsets::Signature("FF 90 78 01 00 00 8B D8 85 C0 0F 89 ? ? ? ? 4C 89 6C 24 68"));
 		createPipelineStateHook2.Patch();
 	};
 }

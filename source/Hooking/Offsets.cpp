@@ -148,12 +148,15 @@ bool Offsets::Initialize()
 
 	auto dosHeader = reinterpret_cast<const IMAGE_DOS_HEADER *>(GetModuleHandleA(nullptr));
 	auto ntHeaders = reinterpret_cast<const IMAGE_NT_HEADERS *>((uintptr_t)dosHeader + dosHeader->e_lfanew);
-	auto region = std::span{ reinterpret_cast<const uint8_t *>(dosHeader), ntHeaders->OptionalHeader.SizeOfImage };
+	auto region = std::span { reinterpret_cast<const uint8_t *>(dosHeader), ntHeaders->OptionalHeader.SizeOfImage };
 
 	auto& entries = SignatureStorageWrapper::GetInitializationEntries();
 
+	auto start = std::chrono::high_resolution_clock::now();
+
 	// Run all scans in parallel
-	std::for_each(std::execution::par, entries.begin(), entries.end(), [&](auto& P)
+	std::for_each(std::execution::par, entries.begin(), entries.end(),
+	[&](auto& P)
 	{
 		auto itr = P->ScanRegion(region);
 
@@ -161,7 +164,13 @@ bool Offsets::Initialize()
 			P->m_Address = reinterpret_cast<uintptr_t>(region.data() + std::distance(region.begin(), itr));
 	});
 
-	const auto failedSignatureCount = std::count_if(entries.begin(), entries.end(), [](const auto& P)
+	auto end = std::chrono::high_resolution_clock::now();
+	auto delta = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+
+	spdlog::info("Resolved {} signatures in {} us.", entries.size(), delta);
+
+	const auto failedSignatureCount = std::count_if(entries.begin(), entries.end(),
+	[](const auto& P)
 	{
 		return !P->IsValid();
 	});

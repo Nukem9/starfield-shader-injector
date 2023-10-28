@@ -44,15 +44,24 @@ namespace D3DShaderReplacement
 	{
 		switch (Type)
 		{
-		case D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_VS: return "vs";
-		case D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_PS: return "ps";
-		case D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_HS: return "hs";
-		case D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_DS: return "ds";
-		case D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_GS: return "gs";
-		case D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_CS: return "cs";
-		case D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_AS: return "as";
-		case D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_MS: return "ms";
-		case D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_ROOT_SIGNATURE: return "rsg";
+		case D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_VS:
+			return "vs";
+		case D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_PS:
+			return "ps";
+		case D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_HS:
+			return "hs";
+		case D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_DS:
+			return "ds";
+		case D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_GS:
+			return "gs";
+		case D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_CS:
+			return "cs";
+		case D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_AS:
+			return "as";
+		case D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_MS:
+			return "ms";
+		case D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_ROOT_SIGNATURE:
+			return "rsg";
 		}
 
 		return "unknown";
@@ -104,7 +113,14 @@ namespace D3DShaderReplacement
 					if (std::ofstream f(csvPath, std::ios::app); f.good())
 					{
 						char csvLine[2048];
-						auto length = sprintf_s(csvLine, "%s,%s,%u,%llX,\"%s\"\n", techniqueShortName, prefix, hash, TechniqueId, TechniqueName);
+						auto length = sprintf_s(
+							csvLine,
+							"%s,%s,%u,%llX,\"%s\"\n",
+							techniqueShortName,
+							prefix,
+							hash,
+							TechniqueId,
+							TechniqueName);
 
 						f.write(csvLine, length);
 					}
@@ -232,11 +248,16 @@ namespace D3DShaderReplacement
 	{
 		switch (Mode)
 		{
-			case D3D12_TEXTURE_ADDRESS_MODE_WRAP: return "TEXTURE_ADDRESS_WRAP";
-			case D3D12_TEXTURE_ADDRESS_MODE_MIRROR: return "TEXTURE_ADDRESS_MIRROR";
-			case D3D12_TEXTURE_ADDRESS_MODE_CLAMP: return "TEXTURE_ADDRESS_CLAMP";
-			case D3D12_TEXTURE_ADDRESS_MODE_BORDER: return "TEXTURE_ADDRESS_BORDER";
-			case D3D12_TEXTURE_ADDRESS_MODE_MIRROR_ONCE: return "TEXTURE_ADDRESS_MIRROR_ONCE";
+		case D3D12_TEXTURE_ADDRESS_MODE_WRAP:
+			return "TEXTURE_ADDRESS_WRAP";
+		case D3D12_TEXTURE_ADDRESS_MODE_MIRROR:
+			return "TEXTURE_ADDRESS_MIRROR";
+		case D3D12_TEXTURE_ADDRESS_MODE_CLAMP:
+			return "TEXTURE_ADDRESS_CLAMP";
+		case D3D12_TEXTURE_ADDRESS_MODE_BORDER:
+			return "TEXTURE_ADDRESS_BORDER";
+		case D3D12_TEXTURE_ADDRESS_MODE_MIRROR_ONCE:
+			return "TEXTURE_ADDRESS_MIRROR_ONCE";
 		}
 
 		return "UNKNOWN";
@@ -246,14 +267,22 @@ namespace D3DShaderReplacement
 	{
 		switch (Func)
 		{
-			case D3D12_COMPARISON_FUNC_NEVER: return "COMPARISON_NEVER";
-			case D3D12_COMPARISON_FUNC_LESS: return "COMPARISON_LESS";
-			case D3D12_COMPARISON_FUNC_EQUAL: return "COMPARISON_EQUAL";
-			case D3D12_COMPARISON_FUNC_LESS_EQUAL: return "COMPARISON_LESS_EQUAL";
-			case D3D12_COMPARISON_FUNC_GREATER: return "COMPARISON_GREATER";
-			case D3D12_COMPARISON_FUNC_NOT_EQUAL: return "COMPARISON_NOT_EQUAL";
-			case D3D12_COMPARISON_FUNC_GREATER_EQUAL: return "COMPARISON_GREATER_EQUAL";
-			case D3D12_COMPARISON_FUNC_ALWAYS: return "COMPARISON_ALWAYS";
+		case D3D12_COMPARISON_FUNC_NEVER:
+			return "COMPARISON_NEVER";
+		case D3D12_COMPARISON_FUNC_LESS:
+			return "COMPARISON_LESS";
+		case D3D12_COMPARISON_FUNC_EQUAL:
+			return "COMPARISON_EQUAL";
+		case D3D12_COMPARISON_FUNC_LESS_EQUAL:
+			return "COMPARISON_LESS_EQUAL";
+		case D3D12_COMPARISON_FUNC_GREATER:
+			return "COMPARISON_GREATER";
+		case D3D12_COMPARISON_FUNC_NOT_EQUAL:
+			return "COMPARISON_NOT_EQUAL";
+		case D3D12_COMPARISON_FUNC_GREATER_EQUAL:
+			return "COMPARISON_GREATER_EQUAL";
+		case D3D12_COMPARISON_FUNC_ALWAYS:
+			return "COMPARISON_ALWAYS";
 		}
 
 		return "UNKNOWN";
@@ -263,14 +292,22 @@ namespace D3DShaderReplacement
 	{
 		switch (Visibility)
 		{
-			case D3D12_SHADER_VISIBILITY_ALL: return "SHADER_VISIBILITY_ALL";
-			case D3D12_SHADER_VISIBILITY_VERTEX: return "SHADER_VISIBILITY_VERTEX";
-			case D3D12_SHADER_VISIBILITY_HULL: return "SHADER_VISIBILITY_HULL";
-			case D3D12_SHADER_VISIBILITY_DOMAIN: return "SHADER_VISIBILITY_DOMAIN";
-			case D3D12_SHADER_VISIBILITY_GEOMETRY: return "SHADER_VISIBILITY_GEOMETRY";
-			case D3D12_SHADER_VISIBILITY_PIXEL: return "SHADER_VISIBILITY_PIXEL";
-			case D3D12_SHADER_VISIBILITY_AMPLIFICATION: return "SHADER_VISIBILITY_AMPLIFICATION";
-			case D3D12_SHADER_VISIBILITY_MESH: return "SHADER_VISIBILITY_MESH";
+		case D3D12_SHADER_VISIBILITY_ALL:
+			return "SHADER_VISIBILITY_ALL";
+		case D3D12_SHADER_VISIBILITY_VERTEX:
+			return "SHADER_VISIBILITY_VERTEX";
+		case D3D12_SHADER_VISIBILITY_HULL:
+			return "SHADER_VISIBILITY_HULL";
+		case D3D12_SHADER_VISIBILITY_DOMAIN:
+			return "SHADER_VISIBILITY_DOMAIN";
+		case D3D12_SHADER_VISIBILITY_GEOMETRY:
+			return "SHADER_VISIBILITY_GEOMETRY";
+		case D3D12_SHADER_VISIBILITY_PIXEL:
+			return "SHADER_VISIBILITY_PIXEL";
+		case D3D12_SHADER_VISIBILITY_AMPLIFICATION:
+			return "SHADER_VISIBILITY_AMPLIFICATION";
+		case D3D12_SHADER_VISIBILITY_MESH:
+			return "SHADER_VISIBILITY_MESH";
 		}
 
 		return "UNKNOWN";
@@ -404,7 +441,10 @@ namespace D3DShaderReplacement
 		return s;
 	}
 
-	std::string RootParameterToString(D3D12_ROOT_PARAMETER_TYPE Type, const D3D12_ROOT_DESCRIPTOR1& Param, D3D12_SHADER_VISIBILITY Visibility)
+	std::string RootParameterToString(
+		D3D12_ROOT_PARAMETER_TYPE Type,
+		const D3D12_ROOT_DESCRIPTOR1& Param,
+		D3D12_SHADER_VISIBILITY Visibility)
 	{
 		std::string s;
 		D3D12_ROOT_DESCRIPTOR_FLAGS defaultFlags = {};
@@ -500,7 +540,7 @@ namespace D3DShaderReplacement
 	std::string StaticSamplerToString(const D3D12_STATIC_SAMPLER_DESC& Sampler)
 	{
 		std::string s = std::format("StaticSampler(s{}", Sampler.ShaderRegister);
-		
+
 		if (Sampler.Filter != D3D12_FILTER_ANISOTROPIC)
 			s += std::format(", filter={}", TextureFilterModeToString(Sampler.Filter));
 
@@ -638,8 +678,7 @@ namespace D3DShaderReplacement
 			case D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_ROOT_SIGNATURE:
 				if (RootSignatureData)
 				{
-					D3D12_SHADER_BYTECODE bytecode
-					{
+					D3D12_SHADER_BYTECODE bytecode {
 						.pShaderBytecode = RootSignatureData->data(),
 						.BytecodeLength = RootSignatureData->size(),
 					};
@@ -656,7 +695,10 @@ namespace D3DShaderReplacement
 						if (FAILED(hr))
 						{
 							// Somebody passed in malformed data
-							spdlog::error("Failed to create root signature: {:X}. Shader technique: {:X}.", static_cast<uint32_t>(hr), TechniqueId);
+							spdlog::error(
+								"Failed to create root signature: {:X}. Shader technique: {:X}.",
+								static_cast<uint32_t>(hr),
+								TechniqueId);
 						}
 						else
 						{

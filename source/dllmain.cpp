@@ -9,10 +9,9 @@ BOOL WINAPI RawDllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 		//
 		// Start vsjitdebugger.exe if a debugger isn't already attached. SFSE_DEBUGGER_REQUEST determines the
 		// command line and SFSE_DEBUGGER_PROC is used to hide the CreateProcessA IAT entry.
-		if (char cmd[256] = {}, proc[256] = {};
-			!IsDebuggerPresent() &&
-			GetEnvironmentVariableA("SFSE_DEBUGGER_REQUEST", cmd, ARRAYSIZE(cmd)) > 0 &&
-			GetEnvironmentVariableA("SFSE_DEBUGGER_PROC", proc, ARRAYSIZE(proc)) > 0)
+		if (char cmd[256] = {}, proc[256] = {}; !IsDebuggerPresent() &&
+												GetEnvironmentVariableA("SFSE_DEBUGGER_REQUEST", cmd, ARRAYSIZE(cmd)) > 0 &&
+												GetEnvironmentVariableA("SFSE_DEBUGGER_PROC", proc, ARRAYSIZE(proc)) > 0)
 		{
 			strcat_s(cmd, std::to_string(GetCurrentProcessId()).c_str());
 			auto moduleName = proc;

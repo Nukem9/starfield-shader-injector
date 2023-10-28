@@ -44,7 +44,8 @@ namespace Plugin
 		logger->flush_on(logger->level());
 		spdlog::set_default_logger(std::move(logger));
 
-		spdlog::info("Starfield Shader Injector {} version {}.{} by Nukem. Mod URL: https://www.nexusmods.com/starfield/mods/5562",
+		spdlog::info(
+			"Starfield Shader Injector {} version {}.{} by Nukem. Mod URL: https://www.nexusmods.com/starfield/mods/5562",
 			UseASI ? "ASI" : "SFSE",
 			BUILD_VERSION_MAJOR,
 			BUILD_VERSION_MINOR);
@@ -97,25 +98,26 @@ namespace Plugin
 #include <sfse_common/sfse_version.h>
 #include <sfse/PluginAPI.h>
 
-extern "C" __declspec(dllexport) const SFSEPluginVersionData SFSEPlugin_Version =
-{
+extern "C" __declspec(dllexport) const SFSEPluginVersionData SFSEPlugin_Version {
 	SFSEPluginVersionData::kVersion,
 
-	(100 * BUILD_VERSION_MAJOR) + BUILD_VERSION_MINOR,				// Plugin version
-	"SFShaderInjector",												// Name
-	"Nukem",														// Author
+	(100 * BUILD_VERSION_MAJOR) + BUILD_VERSION_MINOR,			 // Plugin version
+	"SFShaderInjector",											 // Name
+	"Nukem",													 // Author
 
-	SFSEPluginVersionData::kAddressIndependence_Signatures,			// Address independent
-	SFSEPluginVersionData::kStructureIndependence_InitialLayout,	// Structure independent as of game release
-	{																// Compatible with 1.7.29 through 1.7.36
+	SFSEPluginVersionData::kAddressIndependence_Signatures,		 // Address independent
+	SFSEPluginVersionData::kStructureIndependence_InitialLayout, // Structure independent as of game release
+																 // Compatible with 1.7.29 through 1.7.36
+	{
 		RUNTIME_VERSION_1_7_36,
 		RUNTIME_VERSION_1_7_33,
 		RUNTIME_VERSION_1_7_29,
 		0,
 	},
 
-	0,																// Works with any version of the script extender
-	0, 0,															// Reserved
+	0, // Works with any version of the script extender
+	0,
+	0, // Reserved
 };
 
 extern "C" __declspec(dllexport) bool SFSEPlugin_Load(const SFSEInterface *Interface)
@@ -141,8 +143,7 @@ extern "C" __declspec(dllexport) void InitializeASI()
 	// Plugin dlls can be loaded into non-game processes when people use broken ASI loader setups. The only
 	// version-agnostic and file-name-agnostic method to detect Starfield.exe is to check the export directory
 	// name.
-	if (directory.VirtualAddress == 0 ||
-		directory.Size == 0 ||
+	if (directory.VirtualAddress == 0 || directory.Size == 0 ||
 		memcmp(reinterpret_cast<void *>(module + descriptor->Name), "Starfield.exe", 14) != 0)
 		return;
 

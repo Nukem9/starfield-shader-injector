@@ -44,9 +44,7 @@ public:
 		std::uintptr_t m_Address;
 
 	public:
-		ImplOffset(std::uintptr_t Address) : m_Address(Address)
-		{
-		}
+		ImplOffset(std::uintptr_t Address) : m_Address(Address) {}
 
 		operator std::uintptr_t() const
 		{
@@ -63,7 +61,7 @@ public:
 		PatternByte m_Signature[(PatternLength / 2) + 1];
 		size_t m_SignatureLength = 0;
 
-		consteval ImplPatternLiteral(const char(&Pattern)[PatternLength])
+		consteval ImplPatternLiteral(const char (&Pattern)[PatternLength])
 		{
 			for (size_t i = 0; i < PatternLength - 1;)
 			{
@@ -124,7 +122,7 @@ public:
 	class Signature
 	{
 	private:
-		const static inline SignatureStorageWrapper m_Storage{ Literal.GetSignature() };
+		const static inline SignatureStorageWrapper m_Storage { Literal.GetSignature() };
 
 	public:
 		static ImplOffset GetOffset()
@@ -134,8 +132,7 @@ public:
 	};
 
 	static bool Initialize();
-
 	static ImplOffset Relative(std::uintptr_t Offset);
 	static ImplOffset Absolute(std::uintptr_t Address);
-	#define Signature(X) Signature<Offsets::ImplPatternLiteral(X)>::GetOffset()
+#define Signature(X) Signature<Offsets::ImplPatternLiteral(X)>::GetOffset()
 };
