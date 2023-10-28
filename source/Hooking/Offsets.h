@@ -1,138 +1,139 @@
 #pragma once
 
-class Offsets
+namespace Offsets
 {
-private:
-	Offsets() = delete;
-
-	struct PatternByte
+	namespace Impl
 	{
-		uint8_t Value = 0;
-		bool Wildcard = false;
-	};
-
-	class SignatureStorageWrapper
-	{
-		constexpr static uintptr_t SentinelValue = 0x1337C0DE1337C0DE;
-
-	public:
-		uintptr_t m_Address = SentinelValue;
-		const std::span<const PatternByte> m_Signature;
-
-		SignatureStorageWrapper(std::span<const PatternByte> Signature);
-
-		bool IsValid() const
+		struct PatternEntry
 		{
-			return m_Address != SentinelValue;
-		}
+			uint8_t Value = 0;
+			bool Wildcard = false;
+		};
 
-		uintptr_t Address() const
+		using ByteSpan = std::span<const uint8_t>;
+		using PatternSpan = std::span<const PatternEntry>;
+
+		template<size_t PatternLength>
+		class PatternLiteral
 		{
-			return m_Address;
-		}
+			static_assert(PatternLength >= 3, "Signature must be at least 1 byte long");
 
-		std::span<const PatternByte> FindLongestRun() const;
-		std::span<const uint8_t>::iterator ScanRegion(std::span<const uint8_t> Region) const;
+		public:
+			PatternEntry m_Signature[(PatternLength / 2) + 1];
+			size_t m_SignatureLength = 0;
 
-		static std::vector<Offsets::SignatureStorageWrapper *>& GetInitializationEntries();
-	};
-
-public:
-	class ImplOffset
-	{
-	private:
-		std::uintptr_t m_Address;
-
-	public:
-		ImplOffset(std::uintptr_t Address) : m_Address(Address) {}
-
-		operator std::uintptr_t() const
-		{
-			return m_Address;
-		}
-	};
-
-	template<size_t PatternLength>
-	class ImplPatternLiteral
-	{
-		static_assert(PatternLength >= 3, "Signature must be at least 1 byte long");
-
-	public:
-		PatternByte m_Signature[(PatternLength / 2) + 1];
-		size_t m_SignatureLength = 0;
-
-		consteval ImplPatternLiteral(const char (&Pattern)[PatternLength])
-		{
-			for (size_t i = 0; i < PatternLength - 1;)
+			consteval PatternLiteral(const char (&Pattern)[PatternLength])
 			{
-				switch (Pattern[i])
+				for (size_t i = 0; i < PatternLength - 1;)
 				{
-				case ' ':
-					i++;
-					continue;
+					switch (Pattern[i])
+					{
+					case ' ':
+						i++;
+						continue;
 
-				case '?':
-					if ((i + 2) < PatternLength && Pattern[i + 1] != ' ')
-						throw "Invalid wildcard";
+					case '?':
+						if ((i + 2) < PatternLength && Pattern[i + 1] != ' ')
+							throw "Invalid wildcard";
 
-					m_Signature[m_SignatureLength].Wildcard = true;
-					break;
+						m_Signature[m_SignatureLength].Wildcard = true;
+						break;
 
-				default:
-					m_Signature[m_SignatureLength].Value = AsciiHexToBytes<uint8_t>(Pattern + i);
-					break;
+					default:
+						m_Signature[m_SignatureLength].Value = AsciiHexToBytes<uint8_t>(Pattern + i);
+						break;
+					}
+
+					i += 2;
+					m_SignatureLength++;
 				}
-
-				i += 2;
-				m_SignatureLength++;
 			}
-		}
 
-		consteval std::span<const PatternByte> GetSignature() const
-		{
-			return { m_Signature, m_SignatureLength };
-		}
-
-	private:
-		template<typename T, size_t Digits = sizeof(T) * 2>
-		consteval static T AsciiHexToBytes(const char *Hex)
-		{
-			auto charToByte = [](char C) consteval -> T
+			consteval PatternSpan GetSignature() const
 			{
-				if (C >= 'A' && C <= 'F')
-					return C - 'A' + 10;
-				else if (C >= 'a' && C <= 'f')
-					return C - 'a' + 10;
-				else if (C >= '0' && C <= '9')
-					return C - '0';
+				return { m_Signature, m_SignatureLength };
+			}
 
-				throw "Invalid hexadecimal digit";
-			};
+		private:
+			template<typename T, size_t Digits = sizeof(T) * 2>
+			consteval static T AsciiHexToBytes(const char *Hex)
+			{
+				auto charToByte = [](char C) consteval -> T
+				{
+					if (C >= 'A' && C <= 'F')
+						return C - 'A' + 10;
+					else if (C >= 'a' && C <= 'f')
+						return C - 'a' + 10;
+					else if (C >= '0' && C <= '9')
+						return C - '0';
 
-			T value = {};
+					throw "Invalid hexadecimal digit";
+				};
 
-			for (size_t i = 0; i < Digits; i++)
-				value |= charToByte(Hex[i]) << (4 * (Digits - i - 1));
+				T value = {};
 
-			return value;
-		}
-	};
+				for (size_t i = 0; i < Digits; i++)
+					value |= charToByte(Hex[i]) << (4 * (Digits - i - 1));
 
-	template<ImplPatternLiteral Literal>
-	class Signature
-	{
-	private:
-		const static inline SignatureStorageWrapper m_Storage { Literal.GetSignature() };
+				return value;
+			}
+		};
 
-	public:
-		static ImplOffset GetOffset()
+		class SignatureStorageWrapper
 		{
-			return ImplOffset(m_Storage.Address());
-		}
-	};
+		public:
+			const PatternSpan m_Signature;
+			uintptr_t m_Address = 0;
+			bool m_IsResolved = false;
 
-	static bool Initialize();
-	static ImplOffset Relative(std::uintptr_t Offset);
-	static ImplOffset Absolute(std::uintptr_t Address);
-#define Signature(X) Signature<Offsets::ImplPatternLiteral(X)>::GetOffset()
-};
+			SignatureStorageWrapper(PatternSpan Signature);
+
+			bool IsValid() const
+			{
+				return m_IsResolved;
+			}
+
+			uintptr_t Address() const
+			{
+				return m_Address;
+			}
+
+			ByteSpan::iterator ScanRegion(ByteSpan Region) const;
+
+		private:
+			PatternSpan FindLongestRun() const;
+		};
+
+		class Offset
+		{
+		private:
+			const uintptr_t m_Address;
+
+		public:
+			Offset(uintptr_t Address) : m_Address(Address) {}
+
+			operator uintptr_t() const
+			{
+				return m_Address;
+			}
+		};
+
+		template<PatternLiteral Literal>
+		class Signature
+		{
+		private:
+			const static inline SignatureStorageWrapper m_Storage { Literal.GetSignature() };
+
+		public:
+			static Offset GetOffset()
+			{
+				return Offset(m_Storage.Address());
+			}
+		};
+	}
+
+	bool Initialize();
+	Impl::Offset Relative(std::uintptr_t RelAddress);
+	Impl::Offset Absolute(std::uintptr_t AbsAddress);
+#define Signature(X) Impl::Signature<Offsets::Impl::PatternLiteral(X)>::GetOffset()
+}
