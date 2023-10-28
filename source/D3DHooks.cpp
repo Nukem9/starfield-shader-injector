@@ -118,7 +118,7 @@ namespace D3DHooks
 
 		// Note that streamCopy is initially a 1:1 copy since Desc is const. We don't know if a modification
 		// is applied until PatchPipelineStateStream returns.
-		D3D12PipelineStateStream::Copy streamCopy(Desc);
+		D3DPipelineStateStream::Copy streamCopy(Desc);
 		const std::span rootSignatureData(Tech->m_Inputs->m_RootSignatureBlob, Tech->m_Inputs->m_RootSignatureBlobSize);
 
 		// shaderWasPatched will be true if ANY part of the pipeline state stream is modified by code. If so,

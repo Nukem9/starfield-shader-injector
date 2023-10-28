@@ -10,7 +10,7 @@ namespace CRHooks
 	struct TrackedDataEntry
 	{
 		CreationRenderer::TechniqueData *Technique;
-		D3D12PipelineStateStream::Copy StreamCopy;
+		D3DPipelineStateStream::Copy StreamCopy;
 	};
 
 	std::mutex TrackedShaderDataLock;
@@ -83,13 +83,13 @@ namespace CRHooks
 	void TrackCompiledTechnique(
 		Microsoft::WRL::ComPtr<ID3D12Device2> Device,
 		CreationRenderer::TechniqueData *Technique,
-		D3D12PipelineStateStream::Copy&& StreamCopy,
+		D3DPipelineStateStream::Copy&& StreamCopy,
 		bool WasPatchedUpfront)
 	{
 		// Root signature override has to be tracked
 		if (WasPatchedUpfront)
 		{
-			for (D3D12PipelineStateStream::Iter iter(StreamCopy.GetDesc()); !iter.AtEnd(); iter.Advance())
+			for (D3DPipelineStateStream::Iterator iter(StreamCopy.GetDesc()); !iter.AtEnd(); iter.Advance())
 			{
 				switch (auto obj = iter.GetObj(); obj->Type)
 				{

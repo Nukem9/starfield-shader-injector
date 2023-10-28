@@ -57,7 +57,12 @@ namespace D3DShaderReplacement
 		return "unknown";
 	}
 
-	bool ExtractOrReplaceShader(D3D12PipelineStateStream::Copy& StreamCopy, D3D12_PIPELINE_STATE_SUBOBJECT_TYPE Type, D3D12_SHADER_BYTECODE *Bytecode, const char *TechniqueName, uint64_t TechniqueId)
+	bool ExtractOrReplaceShader(
+		D3DPipelineStateStream::Copy& StreamCopy,
+		D3D12_PIPELINE_STATE_SUBOBJECT_TYPE Type,
+		D3D12_SHADER_BYTECODE *Bytecode,
+		const char *TechniqueName,
+		uint64_t TechniqueId)
 	{
 		// Techniques have to be trimmed as they're too long to be used in file names
 		const auto prefix = GetShaderTypePrefix(Type);
@@ -580,7 +585,12 @@ namespace D3DShaderReplacement
 		return sig;
 	}
 
-	bool PatchPipelineStateStream(D3D12PipelineStateStream::Copy& StreamCopy, ID3D12Device2 *Device, const std::span<const uint8_t> *RootSignatureData, const char *TechniqueName, uint64_t TechniqueId)
+	bool PatchPipelineStateStream(
+		D3DPipelineStateStream::Copy& StreamCopy,
+		ID3D12Device2 *Device,
+		const std::span<const uint8_t> *RootSignatureData,
+		const char *TechniqueName,
+		uint64_t TechniqueId)
 	{
 		bool modified = false;
 
@@ -608,7 +618,7 @@ namespace D3DShaderReplacement
 		}
 #endif
 
-		for (D3D12PipelineStateStream::Iter iter(StreamCopy.GetDesc()); !iter.AtEnd(); iter.Advance())
+		for (D3DPipelineStateStream::Iterator iter(StreamCopy.GetDesc()); !iter.AtEnd(); iter.Advance())
 		{
 			switch (auto obj = iter.GetObj(); obj->Type)
 			{
@@ -659,7 +669,7 @@ namespace D3DShaderReplacement
 		// Loop around once again to disable PSO cache entries
 		if (modified)
 		{
-			for (D3D12PipelineStateStream::Iter iter(StreamCopy.GetDesc()); !iter.AtEnd(); iter.Advance())
+			for (D3DPipelineStateStream::Iterator iter(StreamCopy.GetDesc()); !iter.AtEnd(); iter.Advance())
 			{
 				switch (auto obj = iter.GetObj(); obj->Type)
 				{
