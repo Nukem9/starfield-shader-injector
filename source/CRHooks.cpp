@@ -15,9 +15,9 @@ namespace CRHooks
 
 	std::mutex TrackedShaderDataLock;
 	std::vector<TrackedDataEntry> TrackedPipelineData;
-	std::unordered_map<uint64_t, Microsoft::WRL::ComPtr<ID3D12RootSignature>> TrackedTechniqueIdToRootSignature;
+	std::unordered_map<uint64_t, CComPtr<ID3D12RootSignature>> TrackedTechniqueIdToRootSignature;
 
-	void LiveUpdateFilesystemWatcherThread(Microsoft::WRL::ComPtr<ID3D12Device2> Device)
+	void LiveUpdateFilesystemWatcherThread(CComPtr<ID3D12Device2> Device)
 	{
 		const auto changeHandle = FindFirstChangeNotificationW(D3DShaderReplacement::GetShaderBinDirectory().c_str(), true, FILE_NOTIFY_CHANGE_LAST_WRITE);
 
@@ -44,27 +44,36 @@ namespace CRHooks
 
 				for (auto& data : TrackedPipelineData)
 				{
-					const bool newPipelineRequired = D3DShaderReplacement::PatchPipelineStateStream(data.StreamCopy, Device.Get(), nullptr, data.Technique->m_Name, data.Technique->m_Id);
-					ID3D12PipelineState *pipelineState = nullptr;
+					const bool newPipelineRequired = D3DShaderReplacement::PatchPipelineStateStream(
+						data.StreamCopy,
+						Device.Get(),
+						nullptr,
+						data.Technique->m_Name,
+						data.Technique->m_Id);
 
 					if (!newPipelineRequired)
 						continue;
 
+					CComPtr<ID3D12PipelineState> pipelineState;
 					if (auto hr = Device->CreatePipelineState(data.StreamCopy.GetDesc(), IID_PPV_ARGS(&pipelineState)); FAILED(hr))
 					{
 						spdlog::error("Live update: Failed to compile pipeline: {:X}. Shader technique: {:X}.", static_cast<uint32_t>(hr), data.Technique->m_Id);
 						continue;
 					}
 
-					DebuggingUtil::SetObjectDebugName(pipelineState, data.Technique->m_Name);
+					DebuggingUtil::SetObjectDebugName(pipelineState.Get(), data.Technique->m_Name);
 
-					// Don't need pipelineState->AddRef() since we're swapping pointers. Luckily for us, the game keeps
-					// exactly 1 reference to the old state so we don't have to fix mismatched reference counts either.
+					// pipelineState->AddRef() is needed due to CComPtr's destructor. Luckily for us, the game keeps
+					// exactly 1 reference to the old state so we don't have to fix mismatched reference counts.
 					//
 					// WARNING: This'll never be thread safe. It's meant as a developer tool, not for production.
-					auto old = InterlockedExchangePointer(reinterpret_cast<void **>(&data.Technique->m_PipelineState), pipelineState);
-					(void)old;
-					//static_cast<ID3D12PipelineState *>(old)->Release(); -- HACK: Not stable. Leaks memory for now.
+					//
+					// HACK: oldValue is never released. It's not stable and leaks memory for now.
+					pipelineState->AddRef();
+
+					auto targetPointer = reinterpret_cast<void **>(&data.Technique->m_PipelineState);
+					auto oldValue = InterlockedExchangePointer(targetPointer, pipelineState.Get());
+					(void)oldValue; // ->Release();
 
 					patchCounter++;
 				}
@@ -81,7 +90,7 @@ namespace CRHooks
 	}
 
 	void TrackCompiledTechnique(
-		Microsoft::WRL::ComPtr<ID3D12Device2> Device,
+		CComPtr<ID3D12Device2> Device,
 		CreationRenderer::TechniqueData *Technique,
 		D3DPipelineStateStream::Copy&& StreamCopy,
 		bool WasPatchedUpfront)

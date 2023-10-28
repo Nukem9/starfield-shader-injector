@@ -1,4 +1,5 @@
 #include <d3d12.h>
+#include "CComPtr.h"
 #include "D3DPipelineStateStream.h"
 #include "D3DShaderReplacement.h"
 #include "Plugin.h"
@@ -645,8 +646,12 @@ namespace D3DShaderReplacement
 
 					if (ExtractOrReplaceShader(StreamCopy, obj->Type, &bytecode, TechniqueName, TechniqueId))
 					{
-						ID3D12RootSignature *newSignature = nullptr;
-						const auto hr = Device->CreateRootSignature(0, bytecode.pShaderBytecode, bytecode.BytecodeLength, IID_PPV_ARGS(&newSignature));
+						CComPtr<ID3D12RootSignature> newSignature;
+						const auto hr = Device->CreateRootSignature(
+							0,
+							bytecode.pShaderBytecode,
+							bytecode.BytecodeLength,
+							IID_PPV_ARGS(&newSignature));
 
 						if (FAILED(hr))
 						{
@@ -655,7 +660,7 @@ namespace D3DShaderReplacement
 						}
 						else
 						{
-							obj->RootSignature = newSignature;
+							obj->RootSignature = newSignature.Get();
 							StreamCopy.TrackObject(std::move(newSignature));
 
 							modified = true;

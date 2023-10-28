@@ -1,10 +1,10 @@
 #include <xbyak/xbyak.h>
-#include <wrl/client.h>
 #include "RE/CreationRenderer.h"
+#include "CComPtr.h"
+#include "CRHooks.h"
 #include "D3DShaderReplacement.h"
 #include "DebuggingUtil.h"
 #include "D3Dhooks.h"
-#include "CRHooks.h"
 
 namespace D3DHooks
 {
@@ -21,7 +21,7 @@ namespace D3DHooks
 	// exist or the stream description doesn't match the data in the library, and E_OUTOFMEMORY if the function
 	// is unable to allocate the resulting PSO.
 	//
-	thread_local Microsoft::WRL::ComPtr<ID3D12PipelineLibrary1> TLLastRequestedPipelineLibrary;
+	thread_local CComPtr<ID3D12PipelineLibrary1> TLLastRequestedPipelineLibrary;
 	thread_local CreationRenderer::TechniqueData *TLLastRequestedShaderTechnique;
 	thread_local wchar_t TLLastRequestedPipelineName[64];
 
