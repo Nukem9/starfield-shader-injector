@@ -1,4 +1,5 @@
 #include <Windows.h>
+#include <bit>
 #include <execution>
 
 namespace Offsets::Impl
@@ -95,13 +96,11 @@ namespace Offsets::Impl
 			};
 
 			auto mask = loadMask(0) | loadMask(sizeof(__m128i));
-
+			
 			while (mask != 0)
 			{
-				// Get the index of the first set (leftmost) bit and clear it
-				unsigned long bitIndex;
-				_BitScanForward(&bitIndex, mask);
-
+				// Get the index of the first set (least significant) bit and clear it
+				auto bitIndex = std::countr_zero(mask);
 				mask &= (mask - 1);
 
 				if (testFullSignature(pos + bitIndex - subrangeAdjustment))

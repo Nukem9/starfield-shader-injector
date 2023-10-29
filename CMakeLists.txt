@@ -31,7 +31,7 @@ execute_process(
 #
 if(BUILD_FOR_SFSE)
     set(SFSE_COMMON_DEP "${PROJECT_DEPENDENCIES_PATH}/sfse")
-    add_subdirectory("${SFSE_COMMON_DEP}")
+    add_subdirectory("${SFSE_COMMON_DEP}" EXCLUDE_FROM_ALL)
 
     target_compile_options(
 	    sfse

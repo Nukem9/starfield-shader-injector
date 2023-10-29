@@ -9,29 +9,28 @@
       "hidden": true,
       "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
       "cacheVariables": {
-        "VCPKG_TARGET_TRIPLET": "x64-windows-static-md"
+        "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/vcpkg-triplets"
       }
     },
     {
-      "name": "config-base-cmake",
+      "name": "config-base-cmakedbg",
       "hidden": true,
       "binaryDir": "${sourceDir}/bin/${presetName}",
       "cacheVariables": {
-        "CMAKE_CONFIGURATION_TYPES": "Debug;Release",
-        "CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE": "TRUE"
+        "VCPKG_TARGET_TRIPLET": "x64-windows-static-md",
+        "CMAKE_CONFIGURATION_TYPES": "Debug",
+        "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreadedDebugDLL"
       }
     },
     {
-      "name": "config-base-ninja",
+      "name": "config-base-cmakerel",
       "hidden": true,
-      "generator": "Ninja Multi-Config",
-      "architecture": {
-        "value": "x64",
-        "strategy": "external"
-      },
+      "binaryDir": "${sourceDir}/bin/${presetName}",
       "cacheVariables": {
-        "CMAKE_CXX_FLAGS": "/MP /diagnostics:caret",
-        "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL"
+        "VCPKG_TARGET_TRIPLET": "x64-windows-static-md-release",
+        "CMAKE_CONFIGURATION_TYPES": "Release",
+        "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreadedDLL",
+        "CMAKE_INTERPROCEDURAL_OPTIMIZATION": "TRUE"
       }
     },
     {
@@ -41,61 +40,76 @@
       "architecture": {
         "value": "x64"
       },
-      "inherits": [
-        "config-base-ninja"
-      ]
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS": "/MP /diagnostics:caret"
+      }
+    },
+    {
+      "name": "config-base-ninja",
+      "hidden": true,
+      "generator": "Ninja Multi-Config",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      }
     },
     {
       "name": "sfse",
+      "hidden": true,
       "cacheVariables": {
         "BUILD_FOR_SFSE": "TRUE",
         "BUILD_FOR_ASILOADER": "FALSE"
       },
       "inherits": [
         "config-base-vcpkg",
-        "config-base-cmake",
         "config-base-ninja",
         "config-envvars"
       ]
     },
     {
       "name": "asiloader",
+      "hidden": true,
       "cacheVariables": {
         "BUILD_FOR_SFSE": "FALSE",
         "BUILD_FOR_ASILOADER": "TRUE"
       },
       "inherits": [
         "config-base-vcpkg",
-        "config-base-cmake",
         "config-base-ninja",
         "config-envvars"
       ]
-    }
-  ],
-  "buildPresets": [
-    {
-      "name": "sfse-debug",
-      "configurePreset": "sfse",
-      "configuration": "Debug",
-      "displayName": "SFSE Debug"
     },
     {
-      "name": "sfse-release",
-      "configurePreset": "sfse",
-      "configuration": "Release",
-      "displayName": "SFSE Release"
+      "name": "sfse-rel",
+      "displayName": "SFSE Release",
+      "inherits": [
+        "config-base-cmakerel",
+        "sfse"
+      ]
     },
     {
-      "name": "asi-debug",
-      "configurePreset": "asiloader",
-      "configuration": "Debug",
-      "displayName": "ASI Debug"
+      "name": "sfse-dbg",
+      "displayName": "SFSE Debug",
+      "inherits": [
+        "config-base-cmakedbg",
+        "sfse"
+      ]
     },
     {
-      "name": "asi-release",
-      "configurePreset": "asiloader",
-      "configuration": "Release",
-      "displayName": "ASI Release"
+      "name": "asi-rel",
+      "displayName": "ASI Release",
+      "inherits": [
+        "config-base-cmakerel",
+        "asiloader"
+      ]
+    },
+    {
+      "name": "asi-dbg",
+      "displayName": "ASI Debug",
+      "inherits": [
+        "config-base-cmakedbg",
+        "sfse"
+      ]
     }
   ]
 }
