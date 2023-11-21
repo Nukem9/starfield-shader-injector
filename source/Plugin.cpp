@@ -105,13 +105,11 @@ extern "C" __declspec(dllexport) const SFSEPluginVersionData SFSEPlugin_Version 
 	"SFShaderInjector",											 // Name
 	"Nukem",													 // Author
 
-	SFSEPluginVersionData::kAddressIndependence_Signatures,		 // Address independent
+	SFSEPluginVersionData::kAddressIndependence_Signatures,		 // Address independent as of 1.8.86
 	SFSEPluginVersionData::kStructureIndependence_InitialLayout, // Structure independent as of game release
-																 // Compatible with 1.7.29 through 1.7.36
+																 // Compatible with 1.8.86 and beyond
 	{
-		RUNTIME_VERSION_1_7_36,
-		RUNTIME_VERSION_1_7_33,
-		RUNTIME_VERSION_1_7_29,
+		RUNTIME_VERSION_1_8_86,
 		0,
 	},
 

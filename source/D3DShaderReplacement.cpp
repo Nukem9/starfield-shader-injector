@@ -31,9 +31,12 @@ namespace D3DShaderReplacement
 	{
 		const static auto path = []()
 		{
-			auto temp = std::filesystem::current_path() / "Data" / "shadersfx";
-			spdlog::info("Using custom shader root directory: {}", temp.string());
+			auto temp = Plugin::ShaderDumpBinPath;
 
+			if (temp.empty())
+				temp = std::filesystem::current_path() / "Data" / "shadersfx";
+
+			spdlog::info("Using custom shader root directory: {}", temp.string());
 			return temp;
 		}();
 
@@ -86,11 +89,11 @@ namespace D3DShaderReplacement
 		char shaderBinFileName[512];
 		sprintf_s(shaderBinFileName, "%s_%llX_%s.bin", techniqueShortName, TechniqueId, prefix);
 
+		const auto shaderBinFullPath = GetShaderBinDirectory() / techniqueShortName / shaderBinFileName;
+
 		if (!Plugin::ShaderDumpBinPath.empty())
 		{
 			// Extract it
-			const auto shaderBinFullPath = Plugin::ShaderDumpBinPath / techniqueShortName / shaderBinFileName;
-
 			if (Bytecode->pShaderBytecode && Bytecode->BytecodeLength != 0)
 			{
 				// Calculate the shader data hash, dump it, then map it to a technique name in a dedicated CSV file. It's
@@ -131,8 +134,6 @@ namespace D3DShaderReplacement
 		else
 		{
 			// Replace it
-			const auto shaderBinFullPath = GetShaderBinDirectory() / techniqueShortName / shaderBinFileName;
-
 			if (std::ifstream f(shaderBinFullPath, std::ios::binary | std::ios::ate); f.good())
 			{
 				static bool once = [&]()

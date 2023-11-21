@@ -18,12 +18,12 @@ namespace DebuggingUtil
 			Object->SetName(tempOut);
 	}
 
-	void (*OriginalCreateTexture)(void *, void *, void *, const char *, void *, void *, void *);
-	void HookedCreateTexture(void *a1, void *a2, void *a3, const char *DebugName, void *a5, void *a6, void *a7)
+	void (*OriginalCreateTexture)(void *, void *, void *, void *, const char *, void *, void *);
+	void HookedCreateTexture(void *a1, void *a2, void *a3, void *a4, const char *DebugName, void *a6, void *a7)
 	{
-		OriginalCreateTexture(a1, a2, a3, DebugName, a5, a6, a7);
+		OriginalCreateTexture(a1, a2, a3, a4, DebugName, a6, a7);
 
-		auto textureResource = *reinterpret_cast<void **>(a3);
+		auto textureResource = *reinterpret_cast<void **>(a4);
 		auto dx12TextureResource = *reinterpret_cast<ID3D12Resource **>(reinterpret_cast<uintptr_t>(textureResource) + 0xA8);
 
 		DebuggingUtil::SetObjectDebugName(dx12TextureResource, DebugName);
@@ -54,7 +54,7 @@ namespace DebuggingUtil
 
 		Hooks::WriteJump(
 			Offsets::Signature(
-				"48 8B C4 4C 89 48 20 4C 89 40 18 48 89 50 10 48 89 48 08 53 56 57 41 54 41 55 41 56 41 57 48 81 EC 40 01 00 00"),
+				"4C 89 4C 24 20 4C 89 44 24 18 48 89 54 24 10 48 89 4C 24 08 53 56 57 41 54 41 55 41 56 41 57 48 81 EC D0 02 00 00"),
 			&HookedCreateTexture,
 			&OriginalCreateTexture);
 
