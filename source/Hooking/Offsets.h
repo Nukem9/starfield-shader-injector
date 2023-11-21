@@ -101,7 +101,8 @@ namespace Offsets
 			ByteSpan::iterator ScanRegion(ByteSpan Region) const;
 
 		private:
-			PatternSpan FindLongestRun() const;
+			bool MatchPattern(ByteSpan::iterator Iterator) const;
+			PatternSpan FindLongestNonWildcardRun() const;
 		};
 
 		class Offset
