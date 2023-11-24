@@ -9,39 +9,17 @@
       "hidden": true,
       "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
       "cacheVariables": {
-        "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/vcpkg-triplets"
+        "VCPKG_TARGET_TRIPLET": "x64-windows-static",
+        "VCPKG_OVERLAY_PORTS": "${sourceDir}/vcpkg-ports"
       }
     },
     {
-      "name": "config-base-cmakedbg",
+      "name": "config-base-cmake",
       "hidden": true,
       "binaryDir": "${sourceDir}/bin/${presetName}",
       "cacheVariables": {
-        "VCPKG_TARGET_TRIPLET": "x64-windows-static-md",
-        "CMAKE_CONFIGURATION_TYPES": "Debug",
-        "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreadedDebugDLL"
-      }
-    },
-    {
-      "name": "config-base-cmakerel",
-      "hidden": true,
-      "binaryDir": "${sourceDir}/bin/${presetName}",
-      "cacheVariables": {
-        "VCPKG_TARGET_TRIPLET": "x64-windows-static-md-release",
-        "CMAKE_CONFIGURATION_TYPES": "Release",
-        "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreadedDLL",
-        "CMAKE_INTERPROCEDURAL_OPTIMIZATION": "TRUE"
-      }
-    },
-    {
-      "name": "config-base-msvc2022",
-      "hidden": true,
-      "generator": "Visual Studio 17 2022",
-      "architecture": {
-        "value": "x64"
-      },
-      "cacheVariables": {
-        "CMAKE_CXX_FLAGS": "/MP /diagnostics:caret"
+        "CMAKE_CONFIGURATION_TYPES": "Debug;Release",
+        "CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE": "TRUE"
       }
     },
     {
@@ -51,65 +29,74 @@
       "architecture": {
         "value": "x64",
         "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS": "/MP /diagnostics:caret",
+        "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreaded$<$<CONFIG:Debug>:Debug>"
       }
     },
     {
-      "name": "sfse",
+      "name": "config-base-msvc2022",
       "hidden": true,
+      "generator": "Visual Studio 17 2022",
+      "architecture": {
+        "value": "x64"
+      },
+      "inherits": [
+        "config-base-ninja"
+      ]
+    },
+    {
+      "name": "sfse",
       "cacheVariables": {
         "BUILD_FOR_SFSE": "TRUE",
         "BUILD_FOR_ASILOADER": "FALSE"
       },
       "inherits": [
         "config-base-vcpkg",
+        "config-base-cmake",
         "config-base-ninja",
         "config-envvars"
       ]
     },
     {
       "name": "asiloader",
-      "hidden": true,
       "cacheVariables": {
         "BUILD_FOR_SFSE": "FALSE",
         "BUILD_FOR_ASILOADER": "TRUE"
       },
       "inherits": [
         "config-base-vcpkg",
+        "config-base-cmake",
         "config-base-ninja",
         "config-envvars"
       ]
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "sfse-debug",
+      "configurePreset": "sfse",
+      "configuration": "Debug",
+      "displayName": "SFSE Debug"
     },
     {
-      "name": "sfse-rel",
-      "displayName": "SFSE Release",
-      "inherits": [
-        "config-base-cmakerel",
-        "sfse"
-      ]
+      "name": "sfse-release",
+      "configurePreset": "sfse",
+      "configuration": "Release",
+      "displayName": "SFSE Release"
     },
     {
-      "name": "sfse-dbg",
-      "displayName": "SFSE Debug",
-      "inherits": [
-        "config-base-cmakedbg",
-        "sfse"
-      ]
+      "name": "asi-debug",
+      "configurePreset": "asiloader",
+      "configuration": "Debug",
+      "displayName": "ASI Debug"
     },
     {
-      "name": "asi-rel",
-      "displayName": "ASI Release",
-      "inherits": [
-        "config-base-cmakerel",
-        "asiloader"
-      ]
-    },
-    {
-      "name": "asi-dbg",
-      "displayName": "ASI Debug",
-      "inherits": [
-        "config-base-cmakedbg",
-        "sfse"
-      ]
+      "name": "asi-release",
+      "configurePreset": "asiloader",
+      "configuration": "Release",
+      "displayName": "ASI Release"
     }
   ]
 }

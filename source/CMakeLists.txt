@@ -124,10 +124,8 @@ find_package(spdlog CONFIG REQUIRED)
 target_link_libraries("${PROJECT_NAME}" PRIVATE spdlog::spdlog)
 
 # Detours
-find_path(DETOURS_INCLUDE_DIRS "detours/detours.h")
-find_library(DETOURS_LIBRARY detours REQUIRED)
-target_include_directories("${PROJECT_NAME}" PRIVATE "${DETOURS_INCLUDE_DIRS}")
-target_link_libraries("${PROJECT_NAME}" PRIVATE "${DETOURS_LIBRARY}")
+find_package(detours CONFIG REQUIRED)
+target_link_libraries("${PROJECT_NAME}" PRIVATE detours::detours)
 
 # Xbyak
 find_package(xbyak CONFIG REQUIRED)
