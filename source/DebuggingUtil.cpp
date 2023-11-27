@@ -1,4 +1,4 @@
-#include <Windows.h>
+#include <cstdlib>
 #include <d3d12.h>
 #include "DebuggingUtil.h"
 #include "Plugin.h"
@@ -14,7 +14,7 @@ namespace DebuggingUtil
 			return;
 
 		wchar_t tempOut[1024];
-		if (MultiByteToWideChar(CP_UTF8, 0, Name, -1, tempOut, static_cast<int>(std::ssize(tempOut))) > 0)
+		if (mbstowcs_s(nullptr, tempOut, Name, _TRUNCATE) == 0)
 			Object->SetName(tempOut);
 	}
 
@@ -26,7 +26,7 @@ namespace DebuggingUtil
 		auto textureResource = *reinterpret_cast<void **>(a4);
 		auto dx12TextureResource = *reinterpret_cast<ID3D12Resource **>(reinterpret_cast<uintptr_t>(textureResource) + 0xA8);
 
-		DebuggingUtil::SetObjectDebugName(dx12TextureResource, DebugName);
+		SetObjectDebugName(dx12TextureResource, DebugName);
 	}
 
 	void (*OriginalCmdBeginProfilingMarker)(void *, void *, const char *);

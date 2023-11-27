@@ -1,4 +1,5 @@
 #include <Windows.h>
+#include <charconv>
 
 BOOL WINAPI RawDllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
@@ -13,7 +14,7 @@ BOOL WINAPI RawDllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 												GetEnvironmentVariableA("SFSE_DEBUGGER_REQUEST", cmd, ARRAYSIZE(cmd)) > 0 &&
 												GetEnvironmentVariableA("SFSE_DEBUGGER_PROC", proc, ARRAYSIZE(proc)) > 0)
 		{
-			strcat_s(cmd, std::to_string(GetCurrentProcessId()).c_str());
+			std::to_chars(cmd + strlen(cmd), std::end(cmd), GetCurrentProcessId());
 			auto moduleName = proc;
 			auto importName = strchr(proc, '!') + 1;
 			importName[-1] = '\0';
