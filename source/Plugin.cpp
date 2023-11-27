@@ -96,7 +96,7 @@ namespace Plugin
 
 #if BUILD_FOR_SFSE
 #include <sfse_common/sfse_version.h>
-#include <sfse/PluginAPI.h>
+#include <sfse_common/PluginAPI.h>
 
 extern "C" __declspec(dllexport) const SFSEPluginVersionData SFSEPlugin_Version {
 	SFSEPluginVersionData::kVersion,

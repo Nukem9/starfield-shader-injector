@@ -1,0 +1,4 @@
+The package sfse-common is compatible with built-in CMake targets:
+
+    find_package(sfse-common CONFIG REQUIRED)
+    target_link_libraries(main PRIVATE sfse::sfse_common)

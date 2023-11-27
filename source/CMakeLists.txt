@@ -129,11 +129,10 @@ target_link_libraries("${PROJECT_NAME}" PRIVATE detours::detours)
 
 # Xbyak
 find_package(xbyak CONFIG REQUIRED)
-target_link_libraries("${PROJECT_NAME}" PRIVATE xbyak::xbyak)
 
 # SFSE
 if(BUILD_FOR_SFSE)
-	target_link_libraries("${PROJECT_NAME}" PRIVATE sfse::sfse_common)
+	find_package(sfse-common CONFIG REQUIRED)
 endif()
 
 #

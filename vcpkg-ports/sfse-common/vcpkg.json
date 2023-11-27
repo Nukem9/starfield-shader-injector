@@ -1,0 +1,19 @@
+{
+  "name": "sfse-common",
+  "version": "0.2.0",
+  "port-version": 1,
+  "description": "Starfield Script Extender common components.",
+  "homepage": "https://github.com/ianpatt/sfse",
+  "license": "MIT",
+  "supports": "windows & !uwp",
+  "dependencies": [
+    {
+      "name": "vcpkg-cmake",
+      "host": true
+    },
+    {
+      "name": "vcpkg-cmake-config",
+      "host": true
+    }
+  ]
+}

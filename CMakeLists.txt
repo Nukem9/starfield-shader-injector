@@ -26,21 +26,6 @@ execute_process(
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
-#
-# Add SFSE as necessary
-#
-if(BUILD_FOR_SFSE)
-    set(SFSE_COMMON_DEP "${PROJECT_DEPENDENCIES_PATH}/sfse")
-    add_subdirectory("${SFSE_COMMON_DEP}" EXCLUDE_FROM_ALL)
-
-    target_compile_options(
-	    sfse
-	    PRIVATE
-            "/EHsc"
-    )
-endif()
-
-#
 # Set up the actual library
 #
 add_subdirectory("${PROJECT_SOURCE_PATH}")
