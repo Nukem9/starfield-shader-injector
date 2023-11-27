@@ -19,7 +19,8 @@ vcpkg_build_nmake(
     OPTIONS_DEBUG "DETOURS_CONFIG=Debug"
 )
 
-if(NOT "${VCPKG_BUILD_TYPE}" STREQUAL "release")
+# Debug library
+if (NOT VCPKG_BUILD_TYPE OR VCPKG_BUILD_TYPE STREQUAL "debug")
     file(INSTALL "${CURRENT_BUILDTREES_DIR}/${TARGET_TRIPLET}-dbg/lib.${VCPKG_TARGET_ARCHITECTURE}Debug/" DESTINATION "${CURRENT_PACKAGES_DIR}/debug/lib")
     file(INSTALL "${CURRENT_BUILDTREES_DIR}/${TARGET_TRIPLET}-dbg/include/" DESTINATION "${CURRENT_PACKAGES_DIR}/include" RENAME detours)
 
@@ -28,13 +29,16 @@ if(NOT "${VCPKG_BUILD_TYPE}" STREQUAL "release")
     configure_file("${CMAKE_CURRENT_LIST_DIR}/detours-targets.cmake.in" "${CURRENT_PACKAGES_DIR}/share/${PORT}/detours-targets-debug.cmake" @ONLY)
 endif()
 
-file(INSTALL "${CURRENT_BUILDTREES_DIR}/${TARGET_TRIPLET}-rel/lib.${VCPKG_TARGET_ARCHITECTURE}Release/" DESTINATION "${CURRENT_PACKAGES_DIR}/lib")
-file(INSTALL "${CURRENT_BUILDTREES_DIR}/${TARGET_TRIPLET}-rel/include/" DESTINATION "${CURRENT_PACKAGES_DIR}/include" RENAME detours)
+# Release library
+if (NOT VCPKG_BUILD_TYPE OR VCPKG_BUILD_TYPE STREQUAL "release")
+    file(INSTALL "${CURRENT_BUILDTREES_DIR}/${TARGET_TRIPLET}-rel/lib.${VCPKG_TARGET_ARCHITECTURE}Release/" DESTINATION "${CURRENT_PACKAGES_DIR}/lib")
+    file(INSTALL "${CURRENT_BUILDTREES_DIR}/${TARGET_TRIPLET}-rel/include/" DESTINATION "${CURRENT_PACKAGES_DIR}/include" RENAME detours)
 
-set(MS_DETOURS_CONFIGURATION "RELEASE")
-set(MS_DETOURS_LOCATION "lib/detours.lib")
-configure_file("${CMAKE_CURRENT_LIST_DIR}/detours-targets.cmake.in" "${CURRENT_PACKAGES_DIR}/share/${PORT}/detours-targets-release.cmake" @ONLY)
+    set(MS_DETOURS_CONFIGURATION "RELEASE")
+    set(MS_DETOURS_LOCATION "lib/detours.lib")
+    configure_file("${CMAKE_CURRENT_LIST_DIR}/detours-targets.cmake.in" "${CURRENT_PACKAGES_DIR}/share/${PORT}/detours-targets-release.cmake" @ONLY)
+endif()
 
 file(COPY "${CMAKE_CURRENT_LIST_DIR}/detoursConfig.cmake" DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}")
 file(INSTALL "${CMAKE_CURRENT_LIST_DIR}/usage" DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}")
-file(INSTALL "${SOURCE_PATH}/LICENSE.md" DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}" RENAME copyright)
+vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/LICENSE.md")
