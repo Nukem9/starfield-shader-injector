@@ -1,3 +1,0 @@
-[submodule "dependencies/sfse"]
-	path = dependencies/sfse
-	url = https://github.com/ianpatt/sfse.git
