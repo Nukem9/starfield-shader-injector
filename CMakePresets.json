@@ -87,16 +87,30 @@
       "displayName": "SFSE Release"
     },
     {
-      "name": "asi-debug",
+      "name": "asiloader-debug",
       "configurePreset": "asiloader",
       "configuration": "Debug",
       "displayName": "ASI Debug"
     },
     {
-      "name": "asi-release",
+      "name": "asiloader-release",
       "configurePreset": "asiloader",
       "configuration": "Release",
       "displayName": "ASI Release"
+    }
+  ],
+  "packagePresets": [
+    {
+      "name": "sfse",
+      "displayName": "Package SFSE",
+      "configurePreset": "sfse",
+      "packageDirectory": "${sourceDir}/bin/built-packages"
+    },
+    {
+      "name": "asiloader",
+      "displayName": "Package ASI",
+      "configurePreset": "asiloader",
+      "packageDirectory": "${sourceDir}/bin/built-packages"
     }
   ]
 }

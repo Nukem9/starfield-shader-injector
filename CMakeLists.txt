@@ -33,8 +33,27 @@ add_subdirectory("${PROJECT_SOURCE_PATH}")
 #
 # And finally produce build artifacts
 #
+if(BUILD_FOR_SFSE)
+    set(PLUGIN_LOADER_OUTPUT_DIR "Data/SFSE/Plugins/")
+    set(CPACK_PACKAGE_FILE_NAME "SSI-${CMAKE_PROJECT_VERSION_MAJOR}_${CMAKE_PROJECT_VERSION_MINOR} (SFSE-X_X_XX)")
+elseif(BUILD_FOR_ASILOADER)
+    set(PLUGIN_LOADER_OUTPUT_DIR "/")
+    set(CPACK_PACKAGE_FILE_NAME "SSI-${CMAKE_PROJECT_VERSION_MAJOR}_${CMAKE_PROJECT_VERSION_MINOR} (GamePassASI-X_X_XX)")
+endif()
+
 install(
     FILES
         "${PROJECT_RESOURCES_PATH}/SFShaderInjector.ini"
-    DESTINATION "/"
+    DESTINATION ${PLUGIN_LOADER_OUTPUT_DIR}
 )
+
+install(
+    TARGETS
+        sf_shader_injector_dll
+    RUNTIME
+        DESTINATION ${PLUGIN_LOADER_OUTPUT_DIR}
+)
+
+set(CPACK_GENERATOR "ZIP")
+set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
+include(CPack)

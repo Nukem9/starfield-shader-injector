@@ -1,6 +1,7 @@
 #
 # Set up the source files and output library
 #
+set(CURRENT_PROJECT "sf_shader_injector_dll")
 set(SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 
 file(
@@ -29,26 +30,26 @@ source_group(
 )
 
 add_library(
-	"${PROJECT_NAME}"
+	${CURRENT_PROJECT}
 	SHARED
 		${HEADER_FILES}
 		${SOURCE_FILES}
 )
 
 target_precompile_headers(
-	"${PROJECT_NAME}"
+	${CURRENT_PROJECT}
     PRIVATE
         pch.h
 )
 
 target_include_directories(
-	"${PROJECT_NAME}"
+	${CURRENT_PROJECT}
 	PRIVATE
 		"${SOURCE_DIR}"
 )
 
 set_target_properties(
-	"${PROJECT_NAME}"
+	${CURRENT_PROJECT}
 	PROPERTIES
 		OUTPUT_NAME "SFShaderInjector"
 		MSVC_DEBUG_INFORMATION_FORMAT "ProgramDatabase"
@@ -56,7 +57,7 @@ set_target_properties(
 
 if(BUILD_FOR_ASILOADER)
 	set_target_properties(
-		"${PROJECT_NAME}"
+		${CURRENT_PROJECT}
 		PROPERTIES
 			SUFFIX ".asi"
 	)
@@ -66,14 +67,14 @@ endif()
 # Compiler-specific options
 #
 target_compile_features(
-	"${PROJECT_NAME}"
+	${CURRENT_PROJECT}
 	PRIVATE
 		cxx_std_23
 )
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 	target_compile_options(
-		"${PROJECT_NAME}"
+		${CURRENT_PROJECT}
 		PRIVATE
 			"/utf-8"
 			"/sdl"
@@ -90,17 +91,17 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 	)
 
 	target_link_options(
-		"${PROJECT_NAME}"
+		${CURRENT_PROJECT}
 		PRIVATE
 			# Force generate release PDBs: https://learn.microsoft.com/en-us/cpp/build/reference/debug-generate-debug-info
 			"$<$<CONFIG:RELEASE>:/DEBUG:FULL;/OPT:REF;/OPT:ICF>"
 			# Anonymize RSDS PDB paths
-			"$<$<CONFIG:RELEASE>:/PDBALTPATH:$<TARGET_FILE_PREFIX:${PROJECT_NAME}>$<TARGET_FILE_BASE_NAME:${PROJECT_NAME}>.pdb>"
+			"$<$<CONFIG:RELEASE>:/PDBALTPATH:$<TARGET_FILE_PREFIX:${CURRENT_PROJECT}>$<TARGET_FILE_BASE_NAME:${CURRENT_PROJECT}>.pdb>"
 	)
 endif()
 
 target_compile_definitions(
-	"${PROJECT_NAME}"
+	${CURRENT_PROJECT}
 	PRIVATE
 		NOMINMAX
 		VC_EXTRALEAN
@@ -117,15 +118,15 @@ target_compile_definitions(
 #
 # tomlplusplus
 find_package(tomlplusplus CONFIG REQUIRED)
-target_link_libraries("${PROJECT_NAME}" PRIVATE tomlplusplus::tomlplusplus)
+target_link_libraries(${CURRENT_PROJECT} PRIVATE tomlplusplus::tomlplusplus)
 
 # Spdlog
 find_package(spdlog CONFIG REQUIRED)
-target_link_libraries("${PROJECT_NAME}" PRIVATE spdlog::spdlog)
+target_link_libraries(${CURRENT_PROJECT} PRIVATE spdlog::spdlog)
 
 # Detours
 find_package(detours CONFIG REQUIRED)
-target_link_libraries("${PROJECT_NAME}" PRIVATE detours::detours)
+target_link_libraries(${CURRENT_PROJECT} PRIVATE detours::detours)
 
 # Xbyak
 find_package(xbyak CONFIG REQUIRED)
@@ -140,11 +141,11 @@ endif()
 #
 if(NOT $ENV{GAME_ROOT_DIRECTORY} STREQUAL "")
 	add_custom_command(
-		TARGET "${PROJECT_NAME}"
+		TARGET ${CURRENT_PROJECT}
 		POST_BUILD
 		COMMAND
 			"${CMAKE_COMMAND}" -E copy_if_different
-			"$<TARGET_FILE:${PROJECT_NAME}>"
-			"$ENV{GAME_ROOT_DIRECTORY}/Data/SFSE/Plugins/$<TARGET_FILE_NAME:${PROJECT_NAME}>"
+			"$<TARGET_FILE:${CURRENT_PROJECT}>"
+			"$ENV{GAME_ROOT_DIRECTORY}/Data/SFSE/Plugins/$<TARGET_FILE_NAME:${CURRENT_PROJECT}>"
 	)
 endif()
