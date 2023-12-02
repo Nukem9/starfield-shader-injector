@@ -36,7 +36,7 @@ namespace Plugin
 
 		std::filesystem::path logPath(documentsPath);
 		logPath.append(UseASI ? L"My Games\\Starfield\\Logs" : L"My Games\\Starfield\\SFSE\\Logs");
-		logPath.append(L"SFShaderInjector.log");
+		logPath.append(BUILD_PROJECT_NAME ".log");
 
 		auto logger = spdlog::basic_logger_mt("file_logger", logPath.string(), true);
 		logger->set_level(spdlog::level::level_enum::trace);
@@ -67,8 +67,8 @@ namespace Plugin
 		if (GetModuleFileNameW(dllHandle, dllPath, static_cast<uint32_t>(std::size(dllPath))) == 0)
 			return false;
 
-		std::filesystem::path iniPath(dllPath);
-		iniPath.replace_extension(L".ini");
+		auto iniPath = std::filesystem::path(dllPath).parent_path();
+		iniPath.append(BUILD_PROJECT_NAME ".ini");
 
 		// Then parse the fake .ini as TOML
 		try
@@ -102,7 +102,7 @@ extern "C" __declspec(dllexport) const SFSEPluginVersionData SFSEPlugin_Version 
 	SFSEPluginVersionData::kVersion,
 
 	(100 * BUILD_VERSION_MAJOR) + BUILD_VERSION_MINOR,			 // Plugin version
-	"SFShaderInjector",											 // Name
+	BUILD_PROJECT_NAME,											 // Name
 	"Nukem",													 // Author
 
 	SFSEPluginVersionData::kAddressIndependence_Signatures,		 // Address independent as of 1.8.86
