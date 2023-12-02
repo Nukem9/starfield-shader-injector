@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.26)
 
 project(
     sf_shaderinjector
-    VERSION 1.1
+    VERSION 1.2
     LANGUAGES CXX)
 
 option(BUILD_FOR_SFSE "Build is meant for the Starfield Script Extender" OFF)
@@ -26,6 +26,7 @@ execute_process(
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
+#
 # Set up the actual library
 #
 add_subdirectory("${PROJECT_SOURCE_PATH}")

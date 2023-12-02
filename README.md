@@ -5,12 +5,13 @@ A plugin that allows people to use custom shaders without needing to rebuild or 
 ## Building
 
 - CMake and vcpkg are expected to be set up beforehand. Visual Studio 2022 is recommended.
-- \<preset\> is `asi-rel`, `asi-dbg`, `sfse-rel`, or `sfse-dbg`. 
+- \<configure_preset\> is `asiloader` or `sfse`.
+- \<build_preset\> is `asiloader-release`, `asiloader-debug`, `sfse-release`, or `sfse-debug`.
 
 ```
 git clone --recurse-submodules https://github.com/Nukem9/sf-shader-injector.git
-cmake --preset <preset>
-cmake --build bin/<preset>
+cmake --preset <configure_preset>
+cmake --build --preset <build_preset>
 ```
 
 ## Installation
@@ -21,6 +22,13 @@ cmake --build bin/<preset>
 
 - For manual ASI loader installs, place `SFShaderInjector.asi` in the game root directory next to `Starfield.exe`. An example path is: `C:\XboxGames\Starfield\Content\SFShaderInjector.asi`
 
+## Custom Shader Installation
+
+- Shaders must be installed under the `Data\shadersfx` folder in the game's root directory.
+
+- A Steam edition path looks like this: `C:\steamapps\common\Starfield\Data\shadersfx\ColorGradingMerge\ColorGradingMerge_FF81_cs.bin`
+
+- A Game Pass edition path looks like this: `C:\XboxGames\Starfield\Content\Data\shadersfx\ColorGradingMerge\ColorGradingMerge_FF81_cs.bin`
 
 ## License
 
