@@ -1,4 +1,3 @@
-#include <Windows.h>
 #include <charconv>
 
 BOOL WINAPI RawDllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)

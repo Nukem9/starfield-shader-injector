@@ -9,4 +9,5 @@ namespace Plugin
 	bool Initialize(bool UseASI);
 	bool InitializeLog(bool UseASI);
 	bool InitializeSettings();
+	void *GetThisModuleHandle();
 }

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <spdlog/spdlog.h>
+#include <Windows.h>
+#include <d3d12.h>
 #include <array>
 #include <cstdint>
 #include <filesystem>

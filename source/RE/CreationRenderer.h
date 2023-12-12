@@ -88,4 +88,17 @@ namespace CreationRenderer
 		static TechniqueInfoTable *LookupTable(uint32_t TechniqueTypeIndex); // 14334BC70 Steam 1.7.29
 #endif
 	};
+
+	struct Dx12Unknown
+	{
+		char _pad0[0x48];								  // 00
+		class Dx12Resource *m_Resource;					  // 48
+		char _pad1[0x18];								  // 50
+		D3D12_CPU_DESCRIPTOR_HANDLE *m_RTVCpuDescriptors; // 68
+	};
+
+	ID3D12CommandList *GetRenderGraphCommandList(void *RenderGraphData);
+	Dx12Unknown *AcquireRenderPassRenderTarget(void *RenderPassData, uint32_t RenderTargetId);
+	Dx12Unknown *AcquireRenderPassSingleInput(void *RenderPassData);
+	Dx12Unknown *AcquireRenderPassSingleOutput(void *RenderPassData);
 }

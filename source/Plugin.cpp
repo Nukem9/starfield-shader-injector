@@ -3,6 +3,7 @@
 #include <Windows.h>
 #include <ShlObj.h>
 #include "Plugin.h"
+#include "ReShadeHelper.h"
 
 namespace Plugin
 {
@@ -57,14 +58,8 @@ namespace Plugin
 	bool InitializeSettings()
 	{
 		// Grab the full path of this dll and change the extension to .ini
-		HMODULE dllHandle = nullptr;
-		GetModuleHandleExW(
-			GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-			reinterpret_cast<LPCWSTR>(&InitializeSettings),
-			&dllHandle);
-
 		wchar_t dllPath[1024] = {};
-		if (GetModuleFileNameW(dllHandle, dllPath, static_cast<uint32_t>(std::size(dllPath))) == 0)
+		if (GetModuleFileNameW(static_cast<HMODULE>(GetThisModuleHandle()), dllPath, static_cast<uint32_t>(std::size(dllPath))) == 0)
 			return false;
 
 		auto iniPath = std::filesystem::path(dllPath).parent_path();
@@ -91,6 +86,18 @@ namespace Plugin
 		}
 
 		return true;
+	}
+
+	void *GetThisModuleHandle()
+	{
+		HMODULE dllHandle = nullptr;
+
+		GetModuleHandleExW(
+			GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+			reinterpret_cast<LPCWSTR>(&Initialize),
+			&dllHandle);
+
+		return dllHandle;
 	}
 }
 

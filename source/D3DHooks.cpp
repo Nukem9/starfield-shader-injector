@@ -126,6 +126,8 @@ namespace D3DHooks
 		void **PipelineState,
 		CreationRenderer::TechniqueData *Tech)
 	{
+		CRHooks::TrackDevice(Thisptr);
+
 		if (Riid != __uuidof(ID3D12PipelineState))
 			return E_NOINTERFACE;
 

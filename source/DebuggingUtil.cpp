@@ -1,5 +1,4 @@
 #include <cstdlib>
-#include <d3d12.h>
 #include "DebuggingUtil.h"
 #include "Plugin.h"
 

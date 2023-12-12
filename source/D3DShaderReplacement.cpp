@@ -1,7 +1,8 @@
-#include <d3d12.h>
 #include "CComPtr.h"
 #include "D3DPipelineStateStream.h"
 #include "D3DShaderReplacement.h"
+#include "D3DRootSignature.h"
+#include "DebuggingUtil.h"
 #include "Plugin.h"
 
 #pragma comment(lib, "d3d12.lib")

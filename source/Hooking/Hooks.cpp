@@ -139,6 +139,20 @@ namespace Hooks
 		return true;
 	}
 
+	bool WriteVirtualFunction(std::uintptr_t TableAddress, uint32_t Index, const void *CallbackFunction, void **OriginalFunction)
+	{
+		if (!TableAddress)
+			return false;
+
+		const auto calculatedAddress = TableAddress + (sizeof(void *) * Index);
+
+		if (OriginalFunction)
+			*OriginalFunction = *reinterpret_cast<void **>(calculatedAddress);
+
+		Memory::Patch(calculatedAddress, reinterpret_cast<const std::uint8_t *>(&CallbackFunction), sizeof(void *));
+		return true;
+	}
+
 	bool RedirectImport(
 		void *ModuleHandle,
 		const char *ImportModuleName,

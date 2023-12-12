@@ -2,8 +2,6 @@
 
 #include "D3DPipelineStateStream.h"
 
-struct ID3D12Device2;
-
 namespace D3DShaderReplacement
 {
 	const std::filesystem::path& GetShaderBinDirectory();

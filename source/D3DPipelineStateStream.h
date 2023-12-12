@@ -1,6 +1,5 @@
 #pragma once
 
-#include <d3d12.h>
 #include "CComPtr.h"
 
 namespace D3DPipelineStateStream

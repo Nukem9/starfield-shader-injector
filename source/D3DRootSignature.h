@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-#include <d3d12.h>
 
 namespace D3DRootSignature
 {

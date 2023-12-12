@@ -4,10 +4,10 @@
 #include "CComPtr.h"
 #include "D3DPipelineStateStream.h"
 
-struct ID3D12Device2;
-
 namespace CRHooks
 {
+	void TrackDevice(CComPtr<ID3D12Device2> Device);
+
 	void TrackCompiledTechnique(
 		CComPtr<ID3D12Device2> Device,
 		CreationRenderer::TechniqueData *Technique,

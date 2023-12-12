@@ -1,9 +1,9 @@
 #include <xbyak/xbyak.h>
-#include <d3d12.h>
 #include "D3DShaderReplacement.h"
 #include "DebuggingUtil.h"
 #include "CRHooks.h"
 #include "Plugin.h"
+#include "ReShadeHelper.h"
 
 namespace CRHooks
 {
@@ -96,6 +96,18 @@ namespace CRHooks
 		FindCloseChangeNotification(changeHandle);
 	}
 
+	void TrackDevice(CComPtr<ID3D12Device2> Device)
+	{
+		static bool once = [&]
+		{
+			if (Plugin::AllowLiveUpdates)
+				std::thread(LiveUpdateFilesystemWatcherThread, Device).detach();
+
+			ReShadeHelper::Initialize();
+			return true;
+		}();
+	}
+
 	void TrackCompiledTechnique(
 		CComPtr<ID3D12Device2> Device,
 		CreationRenderer::TechniqueData *Technique,
@@ -119,14 +131,6 @@ namespace CRHooks
 
 		if (Plugin::AllowLiveUpdates)
 		{
-			static bool once = [&]()
-			{
-				std::thread t(LiveUpdateFilesystemWatcherThread, Device);
-				t.detach();
-
-				return true;
-			}();
-
 			std::scoped_lock lock(TrackedShaderDataLock);
 			TrackedPipelineData.emplace_back(TrackedDataEntry {
 				.Technique = Technique,
