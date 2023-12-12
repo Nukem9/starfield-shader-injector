@@ -3,6 +3,8 @@
   "supports": "windows",
   "dependencies": [
     "detours",
+    "reshade-api",
+    "reshade-imgui",
     "spdlog",
     "sfse-common",
     "tomlplusplus",

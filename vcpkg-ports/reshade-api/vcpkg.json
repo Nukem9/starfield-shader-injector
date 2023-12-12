@@ -1,0 +1,9 @@
+{
+  "name": "reshade-api",
+  "version": "5.9.2",
+  "port-version": 1,
+  "description": "Header-only C++ API for ReShade, a generic post-processing injector for games and video software.",
+  "homepage": "https://github.com/crosire/reshade",
+  "license": "MIT",
+  "supports": "windows"
+}
