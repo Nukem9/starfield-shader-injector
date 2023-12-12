@@ -1,7 +1,8 @@
 #
 # Set up the source files and output library
 #
-set(CURRENT_PROJECT "sf_shader_injector_dll")
+set(CURRENT_PROJECT sfse_output_dll)
+set(CURRENT_PROJECT_FRIENDLY_NAME "SFShaderInjector")
 set(SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 
 file(
@@ -51,7 +52,7 @@ target_include_directories(
 set_target_properties(
 	${CURRENT_PROJECT}
 	PROPERTIES
-		OUTPUT_NAME "SFShaderInjector"
+		OUTPUT_NAME ${CURRENT_PROJECT_FRIENDLY_NAME}
 		MSVC_DEBUG_INFORMATION_FORMAT "ProgramDatabase"
 )
 
@@ -107,7 +108,7 @@ target_compile_definitions(
 		VC_EXTRALEAN
 		WIN32_LEAN_AND_MEAN
 
-		BUILD_PROJECT_NAME="SFShaderInjector"
+		BUILD_PROJECT_NAME="${CURRENT_PROJECT_FRIENDLY_NAME}"
 		BUILD_VERSION_MAJOR=${CMAKE_PROJECT_VERSION_MAJOR}
 		BUILD_VERSION_MINOR=${CMAKE_PROJECT_VERSION_MINOR}
 		BUILD_FOR_ASILOADER=$<BOOL:${BUILD_FOR_ASILOADER}>

@@ -50,7 +50,7 @@ install(
 
 install(
     TARGETS
-        sf_shader_injector_dll
+        sfse_output_dll
     RUNTIME
         DESTINATION ${PLUGIN_LOADER_OUTPUT_DIR}
 )

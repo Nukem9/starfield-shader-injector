@@ -10,7 +10,7 @@
       "project": "CMakeLists.txt",
       "projectTarget": "",
       "currentDir": "${env.GAME_ROOT_DIRECTORY}",
-      "exe": "cmd.exe",
+      "exe": "${env.ComSpec}",
       "args": [
         "/C \"${env.GAME_ROOT_DIRECTORY}/sfse_loader.exe\" && taskkill /F /IM VsDebugConsole.exe"
       ],
