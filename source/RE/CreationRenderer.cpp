@@ -12,8 +12,10 @@ namespace CreationRenderer
 
 	Dx12Unknown *AcquireRenderPassRenderTarget(void *RenderPassData, uint32_t RenderTargetId)
 	{
-		auto addr = Offsets::Relative(0x33BD988);
-		auto func = reinterpret_cast<decltype(&AcquireRenderPassRenderTarget)>(addr.operator size_t());
+		// Leads to a call instruction
+		auto addr = Offsets::Signature("E8 ? ? ? ? 48 8B 0D ? ? ? ? 48 8B D8 8B 97 F0 00 00 00 48 89 84 24 E8 00 00 00").operator size_t();
+		addr = addr - 0x5 + *reinterpret_cast<int32_t *>(addr + 0x1);
+		auto func = reinterpret_cast<decltype(&AcquireRenderPassRenderTarget)>(addr);
 
 		return func(RenderPassData, RenderTargetId);
 	}

@@ -1,9 +1,7 @@
 #include <spdlog/sinks/basic_file_sink.h>
 #include <toml++/toml.h>
-#include <Windows.h>
 #include <ShlObj.h>
 #include "Plugin.h"
-#include "ReShadeHelper.h"
 
 namespace Plugin
 {
