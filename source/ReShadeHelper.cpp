@@ -11,8 +11,8 @@ namespace ReShadeHelper
 {
 	struct ID3D12ReShadeGraphicsCommandList : ID3D12GraphicsCommandList
 	{
-		using CallbackFn = std::move_only_function<void(reshade::api::command_list *)>;
-		using CallbackFn2 = std::move_only_function<void(ID3D12CommandQueue *)>;
+		using CallbackPre = std::move_only_function<void(reshade::api::command_list *)>;
+		using CallbackPost = std::move_only_function<void(ID3D12CommandQueue *)>;
 
 		inline static std::unordered_map<ID3D12CommandList *, reshade::api::command_list *> SplitCommandLists;
 
@@ -25,23 +25,65 @@ namespace ReShadeHelper
 		void QueuePreSubmit(F&& Callback)
 		{
 			auto reshadeInterface = GetReShadeInterface();
-			SetImplData(reshadeInterface, IID_CommandListSubmitCallback, new CallbackFn(Callback));
+			SetImplData(reshadeInterface, IID_CommandListSubmitCallback, new CallbackPre(Callback));
 
 			CommandListLock l;
 			SplitCommandLists.emplace(this, reshadeInterface);
 		}
 
+		auto GetPendingPreSubmitCallback()
+		{
+			auto reshadeInterface = GetReShadeInterface();
+			auto callback = GetImplData<CallbackPre *>(reshadeInterface, IID_CommandListSubmitCallback);
+
+			if (callback)
+				SetImplData(reshadeInterface, IID_CommandListSubmitCallback, nullptr);
+
+			return callback;
+		}
+
 		template<typename F>
 		void QueuePostSubmit(F&& Callback)
 		{
-			SetImplData(this, IID_CommandListSubmitCallback, new CallbackFn2(Callback));
+			SetImplData(this, IID_CommandListSubmitCallback, new CallbackPost(Callback));
 
 			CommandListLock l;
-			SplitCommandLists.emplace(this, nullptr);
+			SplitCommandLists.try_emplace(this, nullptr);
+		}
+
+		auto GetPendingPostSubmitCallback()
+		{
+			const auto callback = GetImplData<CallbackPost *>(this, IID_CommandListSubmitCallback);
+
+			if (callback)
+				SetImplData(this, IID_CommandListSubmitCallback, nullptr);
+
+			return callback;
+		}
+
+		void Init(reshade::api::command_list *ReShadeInterface)
+		{
+			SetImplData(this, IID_NativeToReShade, ReShadeInterface);
+		}
+
+		void Destroy()
+		{
+			auto reshadeInterface = GetReShadeInterface();
+			delete GetPendingPreSubmitCallback();
+			delete GetPendingPostSubmitCallback();
+			SetImplData(this, IID_NativeToReShade, nullptr);
+
+			CommandListLock l;
+			std::erase_if(
+				SplitCommandLists,
+				[&](const auto& Pair)
+				{
+					return Pair.second == reshadeInterface;
+				});
 		}
 	};
-	static_assert(sizeof(ID3D12ReShadeGraphicsCommandList) == sizeof(ID3D12GraphicsCommandList));
-	static_assert(alignof(ID3D12ReShadeGraphicsCommandList) == alignof(ID3D12GraphicsCommandList));
+	static_assert(sizeof(ID3D12ReShadeGraphicsCommandList) == sizeof(ID3D12CommandList));
+	static_assert(alignof(ID3D12ReShadeGraphicsCommandList) == alignof(ID3D12CommandList));
 
 	extern void(WINAPI *D3D12CommandQueueExecuteCommandLists)(ID3D12CommandQueue *, UINT, ID3D12CommandList *const *);
 	void WINAPI HookedD3D12CommandQueueExecuteCommandLists(ID3D12CommandQueue *This, UINT NumCommandLists, ID3D12CommandList *const *ppCommandLists);
@@ -98,7 +140,7 @@ namespace ReShadeHelper
 		// Create a graphics command queue using ReShade's wrapped device which should hopefully return a
 		// vtable pointing to ReShade's implementation. If it doesn't, it means third party code likely added
 		// their own hooks. We'll have to skip integrity checks and blindly hook its vtable.
-		static bool once = [&]
+		const static bool once = [&]
 		{
 			const D3D12_COMMAND_QUEUE_DESC queueDesc = {
 				.Type = D3D12_COMMAND_LIST_TYPE_DIRECT,
@@ -121,6 +163,9 @@ namespace ReShadeHelper
 
 			return false;
 		}();
+
+		if (!once)
+			spdlog::error("ReShade initialized, but we failed to hook the D3D12 command queue. Crash imminent.");
 	}
 
 	void OnDestroyEffectRuntime(reshade::api::effect_runtime *Runtime)
@@ -131,32 +176,20 @@ namespace ReShadeHelper
 
 	void OnInitCommandList(reshade::api::command_list *CommandList)
 	{
-		SetImplData(reinterpret_cast<ID3D12CommandList *>(CommandList->get_native()), IID_NativeToReShade, CommandList);
+		reinterpret_cast<ID3D12ReShadeGraphicsCommandList *>(CommandList->get_native())->Init(CommandList);
 	}
 
 	void OnDestroyCommandList(reshade::api::command_list *CommandList)
 	{
-		SetImplData(reinterpret_cast<ID3D12CommandList *>(CommandList->get_native()), IID_NativeToReShade, nullptr);
-
-		CommandListLock l;
-		std::erase_if(
-			ID3D12ReShadeGraphicsCommandList::SplitCommandLists,
-			[&](const auto& Pair)
-			{
-				return Pair.second == CommandList;
-			});
+		reinterpret_cast<ID3D12ReShadeGraphicsCommandList *>(CommandList->get_native())->Destroy();
 	}
 
 	void OnExecuteCommandList(reshade::api::command_queue *Queue, reshade::api::command_list *CommandList)
 	{
-		const auto callback = GetImplData<ID3D12ReShadeGraphicsCommandList::CallbackFn *>(CommandList, IID_CommandListSubmitCallback);
-
-		if (callback)
+		if (auto cb = reinterpret_cast<ID3D12ReShadeGraphicsCommandList *>(CommandList->get_native())->GetPendingPreSubmitCallback())
 		{
-			SetImplData(CommandList, IID_CommandListSubmitCallback, nullptr);
-
-			(*callback)(Queue->get_immediate_command_list());
-			delete callback;
+			(*cb)(Queue->get_immediate_command_list());
+			delete cb;
 		}
 	}
 
@@ -233,18 +266,10 @@ namespace ReShadeHelper
 					D3D12CommandQueueExecuteCommandLists(This, 1, &ppCommandLists[i]);
 					start = i + 1;
 
+					if (auto cb = static_cast<ID3D12ReShadeGraphicsCommandList *>(ppCommandLists[i])->GetPendingPostSubmitCallback())
 					{
-						const auto callback = GetImplData<ID3D12ReShadeGraphicsCommandList::CallbackFn2 *>(
-							ppCommandLists[i],
-							IID_CommandListSubmitCallback);
-
-						if (callback)
-						{
-							SetImplData(ppCommandLists[i], IID_CommandListSubmitCallback, nullptr);
-
-							(*callback)(This);
-							delete callback;
-						}
+						(*cb)(This);
+						delete cb;
 					}
 				}
 			}
@@ -262,18 +287,22 @@ namespace ReShadeHelper
 		auto commandList = static_cast<ID3D12ReShadeGraphicsCommandList *>(CreationRenderer::GetRenderGraphCommandList(a2));
 		auto reshadeInterface = commandList->GetReShadeInterface();
 
+		if (!reshadeInterface)
+			return;
+
 		auto source = CreationRenderer::AcquireRenderPassSingleInput(a3);
 		//auto dest = CreationRenderer::AcquireRenderPassSingleOutput(a3);
 
-		// First, create a 1:1 copy of the depth buffer resource. Then insert a CopyResource call
-		// in this command list to duplicate the end-of-frame depth for later use in effects. 
+		// If automatic depth buffer selection is enabled, we need to copy the game's depth buffer to a
+		// separate texture so that ReShade can use it in effects. ReShade's API can handle resource
+		// creation, but the copy has to be done on the game's command list.
 		auto effectRuntime = GetImplData<reshade::api::effect_runtime *>(reshadeInterface->get_device(), IID_ReShadeEffectRuntime);
 		auto effectConfig = GetImplData<EffectRuntimeConfiguration *>(effectRuntime, __uuidof(EffectRuntimeConfiguration));
 
-		auto device = reshadeInterface->get_device();
-
 		if (effectConfig->m_AutomaticDepthBufferSelection)
 		{
+			auto device = reshadeInterface->get_device();
+
 			// First determine if the depth buffer format changed between frames
 			const auto depthResource = device->get_resource_from_view({ source->m_RTVCpuDescriptors[0].ptr });
 			const auto depthResourceDesc = device->get_resource_desc(depthResource);
@@ -343,7 +372,7 @@ namespace ReShadeHelper
 				{
 					auto nativeDevice = reinterpret_cast<ID3D12Device *>(device->get_native());
 					
-					// Keep a GPU fence around to track and release unused depth copies
+					// GPU-side fence
 					if (!effectConfig->DepthTrackingFence)
 						nativeDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&effectConfig->DepthTrackingFence));
 
@@ -390,23 +419,23 @@ namespace ReShadeHelper
 		auto commandList = static_cast<ID3D12ReShadeGraphicsCommandList *>(CreationRenderer::GetRenderGraphCommandList(a2));
 		auto reshadeInterface = commandList->GetReShadeInterface();
 
+		if (!reshadeInterface)
+			return;
+
 		// Tell ReShade to render effects before this UI command list is submitted. A separate command
 		// list is required because of state tracking reasons.
-		if (reshadeInterface)
+		auto effectRuntime = GetImplData<reshade::api::effect_runtime *>(reshadeInterface->get_device(), IID_ReShadeEffectRuntime);
+		auto effectConfig = GetImplData<EffectRuntimeConfiguration *>(effectRuntime, __uuidof(EffectRuntimeConfiguration));
+
+		if (effectConfig->m_DrawEffectsBeforeUI)
 		{
-			auto effectRuntime = GetImplData<reshade::api::effect_runtime *>(reshadeInterface->get_device(), IID_ReShadeEffectRuntime);
-			auto effectConfig = GetImplData<EffectRuntimeConfiguration *>(effectRuntime, __uuidof(EffectRuntimeConfiguration));
+			auto renderTarget = CreationRenderer::AcquireRenderPassRenderTarget(a3, 0x6601701);
 
-			if (effectConfig->m_DrawEffectsBeforeUI)
-			{
-				auto renderTarget = CreationRenderer::AcquireRenderPassRenderTarget(a3, 0x6601701);
-
-				commandList->QueuePreSubmit(
-					[effectRuntime, rtvHandle = renderTarget->m_RTVCpuDescriptors[0].ptr](reshade::api::command_list *ImmediateCommandList)
-					{
-						effectRuntime->render_effects(ImmediateCommandList, { rtvHandle });
-					});
-			}
+			commandList->QueuePreSubmit(
+				[effectRuntime, rtvHandle = renderTarget->m_RTVCpuDescriptors[0].ptr](reshade::api::command_list *ImmediateCommandList)
+				{
+					effectRuntime->render_effects(ImmediateCommandList, { rtvHandle });
+				});
 		}
 	}
 
