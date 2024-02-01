@@ -18,13 +18,13 @@ cmake --build --preset <build_preset>
 
 - For developers, edit `CMakeUserEnvVars.json` and set `GAME_ROOT_DIRECTORY` to Starfield's root directory. The build script will automatically copy library files to the game folder.
 
-- For manual SFSE installs, place `SFShaderInjector.dll` in the corresponding `Starfield\Data\SFSE\Plugins` folder. An example path is: `C:\steamapps\common\Starfield\Data\SFSE\Plugins\SFShaderInjector.dll`
+- For manual SFSE (Steam) installs, place `SFShaderInjector.dll` in the corresponding `Starfield\Data\SFSE\Plugins` folder. An example path is: `C:\steamapps\common\Starfield\Data\SFSE\Plugins\SFShaderInjector.dll`
 
-- For manual ASI loader installs, place `SFShaderInjector.asi` in the game root directory next to `Starfield.exe`. An example path is: `C:\XboxGames\Starfield\Content\SFShaderInjector.asi`
+- For manual ASI loader (Game Pass) installs, place `SFShaderInjector.asi` in the game root directory next to `Starfield.exe`. An example path is: `C:\XboxGames\Starfield\Content\SFShaderInjector.asi`
 
 ## Custom Shader Installation
 
-- Shaders must be installed under the `Data\shadersfx` folder in the game's root directory.
+- Shaders must be installed under the `Data\shadersfx` folder in Starfield's root directory.
 
 - A Steam edition path looks like this: `C:\steamapps\common\Starfield\Data\shadersfx\ColorGradingMerge\ColorGradingMerge_FF81_cs.bin`
 
@@ -32,5 +32,5 @@ cmake --build --preset <build_preset>
 
 ## License
 
-- TBD.
+- No license provided. TBD.
 - Dependencies are under their respective licenses.
