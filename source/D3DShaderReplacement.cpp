@@ -1,11 +1,8 @@
 #include "CComPtr.h"
 #include "D3DPipelineStateStream.h"
 #include "D3DShaderReplacement.h"
-#include "D3DRootSignature.h"
 #include "DebuggingUtil.h"
 #include "Plugin.h"
-
-#pragma comment(lib, "d3d12.lib")
 
 namespace D3DShaderReplacement
 {
@@ -173,28 +170,6 @@ namespace D3DShaderReplacement
 		uint64_t TechniqueId)
 	{
 		bool modified = false;
-
-#if 0
-		if (TechniqueId == 0x2FF7F ||
-			TechniqueId == 0x400FF59 ||
-			TechniqueId == 0xFF1A ||
-			TechniqueId == 0xFF75 ||
-			TechniqueId == 0xFF81 ||
-			TechniqueId == 0xFF94 ||
-			TechniqueId == 0xFF9A ||
-			TechniqueId == 0xFFAA ||
-			TechniqueId == 0xFFAB)
-		{
-			ID3D12VersionedRootSignatureDeserializer *itf;
-			D3D12CreateVersionedRootSignatureDeserializer(RootSignatureData->data(), RootSignatureData->size(), IID_PPV_ARGS(&itf));
-
-			const auto strTest = RootSignatureToString(itf->GetUnconvertedRootSignatureDesc()->Desc_1_1);
-			const auto txtPath = GetShaderBinDirectory() / std::format("{:X}.txt", TechniqueId);
-
-			if (std::ofstream f(txtPath, std::ios::out); f.good())
-				f.write(strTest.c_str(), strTest.length());
-		}
-#endif
 
 		for (D3DPipelineStateStream::Iterator iter(StreamCopy.GetDesc()); !iter.AtEnd(); iter.Advance())
 		{
