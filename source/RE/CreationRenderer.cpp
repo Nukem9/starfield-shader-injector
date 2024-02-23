@@ -13,7 +13,7 @@ namespace CreationRenderer
 	Dx12Unknown *AcquireRenderPassRenderTarget(void *RenderPassData, uint32_t RenderTargetId)
 	{
 		// Leads to a call instruction
-		auto addr = Offsets::Signature("E8 ? ? ? ? 48 8B 0D ? ? ? ? 48 8B D8 8B 97 F0 00 00 00 48 89 84 24 E8 00 00 00").operator size_t();
+		auto addr = Offsets::Signature("E8 ? ? ? ? 48 8B 0D ? ? ? ? 48 8B D8 8B ? F0 00 00 00 48 89 84 24 ? 00 00 00").operator size_t();
 		addr = addr + *reinterpret_cast<int *>(addr + 1) + 5;
 		auto func = reinterpret_cast<decltype(&AcquireRenderPassRenderTarget)>(addr);
 

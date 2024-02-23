@@ -429,7 +429,7 @@ namespace ReShadeHelper
 
 		if (effectConfig->m_DrawEffectsBeforeUI)
 		{
-			auto renderTarget = CreationRenderer::AcquireRenderPassRenderTarget(a3, 0x6601701);
+			auto renderTarget = CreationRenderer::AcquireRenderPassRenderTarget(a3, 0x6701701);
 
 			commandList->QueuePreSubmit(
 				[effectRuntime, rtvHandle = renderTarget->m_RTVCpuDescriptors[0].ptr](reshade::api::command_list *ImmediateCommandList)
@@ -442,8 +442,8 @@ namespace ReShadeHelper
 	DECLARE_HOOK_TRANSACTION(ReShadeHelper)
 	{
 		Hooks::WriteJump(
-			Offsets::Signature("48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 57 41 54 41 55 41 56 41 57 48 81 EC A0 00 00 00 48 8B F2 48 "
-							   "8B F9 BA 00 60 61 06"),
+			Offsets::Signature(
+				"48 89 5C 24 08 48 89 6C 24 18 48 89 74 24 20 57 41 54 41 55 41 56 41 57 48 81 EC A0 00 00 00 8B 82 40 01 00 00 48 8B F2"),
 			&HookedScaleformCompositeDrawPass,
 			&OriginalScaleformCompositeDrawPass);
 

@@ -147,8 +147,8 @@ namespace Offsets
 	{
 		spdlog::info("{}():", __FUNCTION__);
 
-		auto dosHeader = reinterpret_cast<const IMAGE_DOS_HEADER *>(GetModuleHandleA(nullptr));
-		auto ntHeaders = reinterpret_cast<const IMAGE_NT_HEADERS *>((uintptr_t)dosHeader + dosHeader->e_lfanew);
+		auto dosHeader = reinterpret_cast<const PIMAGE_DOS_HEADER>(GetModuleHandleW(nullptr));
+		auto ntHeaders = reinterpret_cast<const PIMAGE_NT_HEADERS>(reinterpret_cast<uintptr_t>(dosHeader) + dosHeader->e_lfanew);
 		auto region = std::span { reinterpret_cast<const uint8_t *>(dosHeader), ntHeaders->OptionalHeader.SizeOfImage };
 
 		auto& entries = GetInitializationEntries();
@@ -183,7 +183,7 @@ namespace Offsets
 
 	Offset Relative(std::uintptr_t RelAddress)
 	{
-		return Offset(reinterpret_cast<std::uintptr_t>(GetModuleHandleA(nullptr)) + RelAddress);
+		return Offset(reinterpret_cast<std::uintptr_t>(GetModuleHandleW(nullptr)) + RelAddress);
 	}
 
 	Offset Absolute(std::uintptr_t AbsAddress)
