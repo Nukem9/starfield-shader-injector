@@ -17,10 +17,11 @@ namespace CreationRenderer
 
 	class PipelineLayoutDx12
 	{
-	public:
-		PipelineLayoutDx12() = delete; // 1433D3670 Steam 1.7.29
+	private:
+		PipelineLayoutDx12() = delete;
 		virtual ~PipelineLayoutDx12();
 
+	public:
 		void *m_LayoutConfigurationData;	  // 0x8
 		char _pad0[0x68];					  // 0x10
 		ID3D12RootSignature *m_RootSignature; // 0x78 Ref counted
@@ -31,36 +32,35 @@ namespace CreationRenderer
 
 	class ShaderInputsContainerDx12
 	{
-	public:
-		ShaderInputsContainerDx12() = delete; // 1432E6F30 Steam 1.7.29
+	private:
+		ShaderInputsContainerDx12() = delete;
 
-		void *m_Unknown1;					  // 0x0
-		void *m_ConstantDataBuffers[10];	  // 0x8 Guessed
-		uint32_t m_ConstantDataSizes[10];	  // 0x48
-		const uint8_t *m_RootSignatureBlob;	  // 0x80
-		void *m_Unknown2;					  // 0x88 Ref counted
-		uint32_t m_RootSignatureBlobSize;	  // 0x90
+	public:
+		char _pad0[0x38];					// 0x0
+		const uint8_t *m_RootSignatureBlob; // 0x38
+		char _pad1[0x8];					// 0x40
+		uint32_t m_RootSignatureBlobSize;	// 0x48
 	};
-	static_assert(sizeof(ShaderInputsContainerDx12) == 0x98);
+	static_assert(offsetof(ShaderInputsContainerDx12, m_RootSignatureBlob) == 0x38);
+	static_assert(offsetof(ShaderInputsContainerDx12, m_RootSignatureBlobSize) == 0x48);
 
 	class TechniqueData
 	{
+	private:
+		TechniqueData() = delete;
+
 	public:
-		uint32_t m_Type;								// 0x0 ShaderType as uint32
-		ShaderInputsContainerDx12 *m_Inputs;			// 0x8
-		char _pad1[0x20];								// 0x10
-		PipelineLayoutDx12 *m_PipelineLayout;			// 0x30
-		char _pad2[0x40];								// 0x38 std::variant<> at 0x70
-		uint64_t m_Id;									// 0x78
-		char _pad3[0x8];								// 0x80
-		const char *m_Name;								// 0x88
-		ID3D12PipelineState *m_PipelineState;			// 0x90 Ref counted?
-		ID3D12PipelineState *m_RayTracingPipelineState; // 0x98 Ref counted?
+		uint32_t m_Type;					  // 0x0 ShaderType
+		ShaderInputsContainerDx12 *m_Inputs;  // 0x8
+		char _pad1[0x50];					  // 0x10
+		uint64_t m_Id;						  // 0x60
+		char _pad4[0x8];					  // 0x68
+		const char *m_Name;					  // 0x70
+		ID3D12PipelineState *m_PipelineState; // 0x78
 	};
 	static_assert(offsetof(TechniqueData, m_Inputs) == 0x8);
-	static_assert(offsetof(TechniqueData, m_PipelineLayout) == 0x30);
-	static_assert(offsetof(TechniqueData, m_Id) == 0x78);
-	static_assert(offsetof(TechniqueData, m_Name) == 0x88);
+	static_assert(offsetof(TechniqueData, m_Id) == 0x60);
+	static_assert(offsetof(TechniqueData, m_Name) == 0x70);
 
 	class TechniqueInfoTable
 	{
@@ -85,7 +85,7 @@ namespace CreationRenderer
 		const char *m_BaseTypeName;				 // 0x18
 
 #if 0
-		static TechniqueInfoTable *LookupTable(uint32_t TechniqueTypeIndex); // 14334BC70 Steam 1.7.29
+		static TechniqueInfoTable *LookupTable(uint32_t TechniqueTypeIndex);
 #endif
 	};
 

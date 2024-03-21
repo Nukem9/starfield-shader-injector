@@ -152,8 +152,11 @@ namespace D3DHooks
 		{
 			if (TLLastRequestedPipelineLibrary && TLLastRequestedShaderTechnique == Tech)
 			{
-				if (SUCCEEDED(TLLastRequestedPipelineLibrary
-								  ->LoadPipeline(TLLastRequestedPipelineName, streamCopy.GetDesc(), Riid, PipelineState)))
+				if (SUCCEEDED(TLLastRequestedPipelineLibrary->LoadPipeline(
+					TLLastRequestedPipelineName,
+					streamCopy.GetDesc(),
+					Riid,
+					PipelineState)))
 					shaderWasLoadedFromCache = true;
 			}
 		}

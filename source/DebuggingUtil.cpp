@@ -23,7 +23,7 @@ namespace DebuggingUtil
 		OriginalCreateTexture(a1, a2, a3, a4, DebugName, a6, a7);
 
 		auto textureResource = *reinterpret_cast<void **>(a4);
-		auto dx12TextureResource = *reinterpret_cast<ID3D12Resource **>(reinterpret_cast<uintptr_t>(textureResource) + 0xA8);
+		auto dx12TextureResource = *reinterpret_cast<ID3D12Resource **>(reinterpret_cast<uintptr_t>(textureResource) + 0x78);
 
 		SetObjectDebugName(dx12TextureResource, DebugName);
 	}
