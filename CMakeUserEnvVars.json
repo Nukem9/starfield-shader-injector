@@ -6,8 +6,7 @@
       "hidden": true,
       "environment": {
         "GAME_ROOT_DIRECTORY": "C:/Program Files (x86)/Steam/steamapps/common/Starfield",
-        "SFSE_DEBUGGER_REQUEST": "vsjitdebugger.exe -p ",
-        "SFSE_DEBUGGER_PROC": "kernel32!CreateProcessA"
+        "GAME_DEBUGGER_CMDLINE": "$env{GAME_ROOT_DIRECTORY}/sfse_loader.exe"
       }
     }
   ]

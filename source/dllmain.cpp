@@ -4,14 +4,14 @@ BOOL WINAPI RawDllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
 	if (fdwReason == DLL_PROCESS_ATTACH)
 	{
-		// The child process debugging extension for Visual Studio conflicts with SFSE's injection mechanism.
-		// I've no choice but to use a hack.
+		// The child process debugging extension for Visual Studio conflicts with SKSE's injection mechanism.
+		// No choice but to use a hack.
 		//
-		// Start vsjitdebugger.exe if a debugger isn't already attached. SFSE_DEBUGGER_REQUEST determines the
-		// command line and SFSE_DEBUGGER_PROC is used to hide the CreateProcessA IAT entry.
-		if (char cmd[256] = {}, proc[256] = {}; !IsDebuggerPresent() &&
-												GetEnvironmentVariableA("SFSE_DEBUGGER_REQUEST", cmd, ARRAYSIZE(cmd)) > 0 &&
-												GetEnvironmentVariableA("SFSE_DEBUGGER_PROC", proc, ARRAYSIZE(proc)) > 0)
+		// Start vsjitdebugger.exe if a debugger isn't already attached. GAME_DEBUGGER_REQUEST determines the
+		// command line and GAME_DEBUGGER_PROC is used to hide the CreateProcessA IAT entry.
+		if (char cmd[512] = {}, proc[512] = {}; !IsDebuggerPresent() &&
+												GetEnvironmentVariableA("GAME_DEBUGGER_REQUEST", cmd, ARRAYSIZE(cmd)) > 0 &&
+												GetEnvironmentVariableA("GAME_DEBUGGER_PROC", proc, ARRAYSIZE(proc)) > 0)
 		{
 			std::to_chars(cmd + strlen(cmd), std::end(cmd), GetCurrentProcessId());
 			auto moduleName = proc;
@@ -19,8 +19,11 @@ BOOL WINAPI RawDllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 			importName[-1] = '\0';
 
 			PROCESS_INFORMATION pi = {};
+
 			STARTUPINFOA si = {};
 			si.cb = sizeof(si);
+			si.dwFlags = STARTF_USESHOWWINDOW;
+			si.wShowWindow = SW_HIDE;
 
 			auto c = reinterpret_cast<decltype(&CreateProcessA)>(GetProcAddress(GetModuleHandleA(moduleName), importName));
 			c(nullptr, cmd, nullptr, nullptr, false, 0, nullptr, nullptr, &si, &pi);
