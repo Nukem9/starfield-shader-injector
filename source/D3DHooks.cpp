@@ -223,7 +223,7 @@ namespace D3DHooks
 	DECLARE_HOOK_TRANSACTION(D3DHooks)
 	{
 		static LoadPipelineHookGen loadPipelineHook(
-			Offsets::Signature("FF 50 68 85 C0 0F 89 ? ? ? ? 49 8B 8F A0 03 00 00 48 8B 01 4C 8B CF 4C 8D"));
+			Offsets::Signature("FF 50 68 85 C0 0F 89 ? ? ? ? 49 8B 8F ? ? ? ? 48 8B 01 4C 8B CF 4C 8D"));
 		loadPipelineHook.Patch();
 
 		static StorePipelineHookGen storePipelineHook(Offsets::Signature("FF 50 40 8B D8 85 C0 0F 89 ? ? ? ? 45 33 E4 4C 89 64 24 58"));

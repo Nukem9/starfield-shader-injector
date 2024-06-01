@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.26)
 
 project(
     sf_shaderinjector
-    VERSION 1.5
+    VERSION 1.6
     LANGUAGES CXX)
 
 option(BUILD_FOR_SFSE "Build is meant for the Starfield Script Extender" OFF)
