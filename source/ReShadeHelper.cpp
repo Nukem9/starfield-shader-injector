@@ -443,7 +443,7 @@ namespace ReShadeHelper
 	{
 		Hooks::WriteJump(
 			Offsets::Signature(
-				"48 89 5C 24 08 48 89 6C 24 18 48 89 74 24 20 57 41 54 41 55 41 56 41 57 48 81 EC A0 00 00 00 8B 82 40 01 00 00 48 8B F2"),
+				"48 89 5C 24 08 48 89 6C 24 18 48 89 74 24 20 57 41 54 41 55 41 56 41 57 48 81 EC A0 00 00 00 8B 82 40 01 00 00"),
 			&HookedScaleformCompositeDrawPass,
 			&OriginalScaleformCompositeDrawPass);
 
