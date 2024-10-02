@@ -119,8 +119,8 @@ target_compile_definitions(
 # Dependencies
 #
 # tomlplusplus
-find_package(tomlplusplus CONFIG REQUIRED)
-target_link_libraries(${CURRENT_PROJECT} PRIVATE tomlplusplus::tomlplusplus)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(tomlplusplus REQUIRED IMPORTED_TARGET tomlplusplus)
 
 # Spdlog
 find_package(spdlog CONFIG REQUIRED)
