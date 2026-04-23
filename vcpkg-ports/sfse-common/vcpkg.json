@@ -1,6 +1,6 @@
 {
   "name": "sfse-common",
-  "version": "0.2.0",
+  "version": "0.2.19",
   "port-version": 1,
   "description": "Starfield Script Extender common components.",
   "homepage": "https://github.com/ianpatt/sfse",

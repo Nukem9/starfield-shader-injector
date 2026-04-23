@@ -4,7 +4,6 @@
 #include "CRHooks.h"
 #include "D3DShaderReplacement.h"
 #include "DebuggingUtil.h"
-#include "D3Dhooks.h"
 
 namespace D3DHooks
 {
@@ -100,7 +99,7 @@ namespace D3DHooks
 			mov(r9, r12); // a4: Technique pointer
 			mov(rax, reinterpret_cast<uintptr_t>(&StorePipelineForTechnique));
 			call(rax);
-			mov(ebx, eax);
+			mov(ebp, eax);
 
 			jmp(ptr[rip]);
 			dq(m_TargetAddress + 0x5);
@@ -352,18 +351,19 @@ namespace D3DHooks
 	DECLARE_HOOK_TRANSACTION(D3DHooks)
 	{
 		static LoadPipelineHookGen loadPipelineHook(
-			Offsets::Signature("FF 50 68 85 C0 0F 89 ? ? ? ? 49 8B 8F ? ? ? ? 48 8B 01 4C 8B CF 4C 8D"));
+			Offsets::Signature("FF 50 68 85 C0 0F 89 ? ? 00 00 49 8B 8D 18 04 00 00 48 8B 01"));
 		loadPipelineHook.Patch();
 
-		static StorePipelineHookGen storePipelineHook(Offsets::Signature("FF 50 40 8B D8 85 C0 0F 89 ? ? ? ? 45 33 E4 4C 89 64 24 58"));
+		static StorePipelineHookGen storePipelineHook(
+			Offsets::Signature("FF 50 40 8B E8 85 C0 0F 89 ? ? 00 00 45 33 FF 4C 89")); // WARNING: Banking on r12 being preserved across function call
 		storePipelineHook.Patch();
 
 		static CreatePipelineStateHookGen createPipelineStateHook1(
-			Offsets::Signature("FF 90 78 01 00 00 8B D8 41 BD FF FF FF FF 85 C0 0F 89 ? ? ? ? 33 C0"));
+			Offsets::Signature("FF 90 78 01 00 00 8B D8 85 C0 0F 89 8A 02 00 00 4C 89"));
 		createPipelineStateHook1.Patch();
 
 		static CreatePipelineStateHookGen createPipelineStateHook2(
-			Offsets::Signature("FF 90 78 01 00 00 8B D8 85 C0 0F 89 ? ? ? ? 4C 89 6C 24 68"));
+			Offsets::Signature("FF 90 78 01 00 00 8B D8 85 C0 0F 89 8F 01 00 00 4C 89"));
 		createPipelineStateHook2.Patch();
 
 		static FFXCreateGraphicsPipelineStateHookGen createGraphicsPipelineStateHook(

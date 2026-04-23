@@ -14,7 +14,7 @@ namespace ReShadeHelper
 		using CallbackPre = std::move_only_function<void(reshade::api::command_list *)>;
 		using CallbackPost = std::move_only_function<void(ID3D12CommandQueue *)>;
 
-		inline static std::unordered_map<ID3D12CommandList *, reshade::api::command_list *> SplitCommandLists;
+		inline static std::atomic_uint32_t SplitCommandListCount;
 
 		reshade::api::command_list *GetReShadeInterface()
 		{
@@ -22,41 +22,21 @@ namespace ReShadeHelper
 		}
 
 		template<typename F>
-		void QueuePreSubmit(F&& Callback)
+		void QueuePostSubmitCallback(F&& Callback)
 		{
-			auto reshadeInterface = GetReShadeInterface();
-			SetImplData(reshadeInterface, IID_CommandListSubmitCallback, new CallbackPre(Callback));
-
-			CommandListLock l;
-			SplitCommandLists.emplace(this, reshadeInterface);
-		}
-
-		auto GetPendingPreSubmitCallback()
-		{
-			auto reshadeInterface = GetReShadeInterface();
-			auto callback = GetImplData<CallbackPre *>(reshadeInterface, IID_CommandListSubmitCallback);
-
-			if (callback)
-				SetImplData(reshadeInterface, IID_CommandListSubmitCallback, nullptr);
-
-			return callback;
-		}
-
-		template<typename F>
-		void QueuePostSubmit(F&& Callback)
-		{
+			SplitCommandListCount++;
 			SetImplData(this, IID_CommandListSubmitCallback, new CallbackPost(Callback));
-
-			CommandListLock l;
-			SplitCommandLists.try_emplace(this, nullptr);
 		}
 
-		auto GetPendingPostSubmitCallback()
+		auto PopPendingPostSubmitCallback()
 		{
 			const auto callback = GetImplData<CallbackPost *>(this, IID_CommandListSubmitCallback);
 
 			if (callback)
+			{
 				SetImplData(this, IID_CommandListSubmitCallback, nullptr);
+				SplitCommandListCount--;
+			}
 
 			return callback;
 		}
@@ -68,18 +48,8 @@ namespace ReShadeHelper
 
 		void Destroy()
 		{
-			auto reshadeInterface = GetReShadeInterface();
-			delete GetPendingPreSubmitCallback();
-			delete GetPendingPostSubmitCallback();
+			delete PopPendingPostSubmitCallback();
 			SetImplData(this, IID_NativeToReShade, nullptr);
-
-			CommandListLock l;
-			std::erase_if(
-				SplitCommandLists,
-				[&](const auto& Pair)
-				{
-					return Pair.second == reshadeInterface;
-				});
 		}
 	};
 	static_assert(sizeof(ID3D12ReShadeGraphicsCommandList) == sizeof(ID3D12CommandList));
@@ -184,15 +154,6 @@ namespace ReShadeHelper
 		reinterpret_cast<ID3D12ReShadeGraphicsCommandList *>(CommandList->get_native())->Destroy();
 	}
 
-	void OnExecuteCommandList(reshade::api::command_queue *Queue, reshade::api::command_list *CommandList)
-	{
-		if (auto cb = reinterpret_cast<ID3D12ReShadeGraphicsCommandList *>(CommandList->get_native())->GetPendingPreSubmitCallback())
-		{
-			(*cb)(Queue->get_immediate_command_list());
-			delete cb;
-		}
-	}
-
 	void OnDrawSettingsOverlay(reshade::api::effect_runtime *Runtime)
 	{
 		auto effectConfig = GetImplData<EffectRuntimeConfiguration *>(Runtime, __uuidof(EffectRuntimeConfiguration));
@@ -218,7 +179,6 @@ namespace ReShadeHelper
 		reshade::register_event<reshade::addon_event::destroy_effect_runtime>(OnDestroyEffectRuntime);
 		reshade::register_event<reshade::addon_event::init_command_list>(OnInitCommandList);
 		reshade::register_event<reshade::addon_event::destroy_command_list>(OnDestroyCommandList);
-		reshade::register_event<reshade::addon_event::execute_command_list>(OnExecuteCommandList);
 
 		spdlog::info("Registered ReShade addon.");
 	}
@@ -226,39 +186,18 @@ namespace ReShadeHelper
 	void(WINAPI *D3D12CommandQueueExecuteCommandLists)(ID3D12CommandQueue *, UINT, ID3D12CommandList *const *);
 	void WINAPI HookedD3D12CommandQueueExecuteCommandLists(ID3D12CommandQueue *This, UINT NumCommandLists, ID3D12CommandList *const *ppCommandLists)
 	{
-		const auto localSplits = [&]()
-		{
-			std::vector<ID3D12CommandList *> splits;
-
-			if (NumCommandLists <= 0)
-				return splits;
-
-			CommandListLock l;
-
-			if (ID3D12ReShadeGraphicsCommandList::SplitCommandLists.empty())
-				return splits;
-
-			for (uint32_t i = 0; i < NumCommandLists; i++)
-			{
-				auto node = ID3D12ReShadeGraphicsCommandList::SplitCommandLists.extract(ppCommandLists[i]);
-
-				if (!node.empty())
-					splits.emplace_back(node.key());
-			}
-
-			return splits;
-		}();
-
 		// Zero matches => forward to original function by default
 		uint32_t i = NumCommandLists;
 		uint32_t start = 0;
 
-		if (!localSplits.empty())
+		if (ID3D12ReShadeGraphicsCommandList::SplitCommandListCount != 0)
 		{
-			// Batch prior command list submissions together until a match is found in localSplits
+			// Batch prior command list submissions together until a split is required
 			for (i = 0; i < NumCommandLists; i++)
 			{
-				if (std::find(localSplits.begin(), localSplits.end(), ppCommandLists[i]) != localSplits.end())
+				auto callback = static_cast<ID3D12ReShadeGraphicsCommandList *>(ppCommandLists[i])->PopPendingPostSubmitCallback();
+
+				if (callback)
 				{
 					if (i > start)
 						D3D12CommandQueueExecuteCommandLists(This, i - start, &ppCommandLists[start]);
@@ -266,11 +205,8 @@ namespace ReShadeHelper
 					D3D12CommandQueueExecuteCommandLists(This, 1, &ppCommandLists[i]);
 					start = i + 1;
 
-					if (auto cb = static_cast<ID3D12ReShadeGraphicsCommandList *>(ppCommandLists[i])->GetPendingPostSubmitCallback())
-					{
-						(*cb)(This);
-						delete cb;
-					}
+					(*callback)(This);
+					delete callback;
 				}
 			}
 		}
@@ -290,8 +226,7 @@ namespace ReShadeHelper
 		if (!reshadeInterface)
 			return;
 
-		auto source = CreationRenderer::AcquireRenderPassSingleInput(a3);
-		//auto dest = CreationRenderer::AcquireRenderPassSingleOutput(a3);
+		auto sourceImage = CreationRenderer::AcquireRenderPassIO(a3, 1);
 
 		// If automatic depth buffer selection is enabled, we need to copy the game's depth buffer to a
 		// separate texture so that ReShade can use it in effects. ReShade's API can handle resource
@@ -304,12 +239,12 @@ namespace ReShadeHelper
 			auto device = reshadeInterface->get_device();
 
 			// First determine if the depth buffer format changed between frames
-			const auto depthResource = device->get_resource_from_view({ source->m_RTVCpuDescriptors[0].ptr });
+			const auto depthResource = device->get_resource_from_view({ sourceImage->m_RTVCpuDescriptors[0].ptr });
 			const auto depthResourceDesc = device->get_resource_desc(depthResource);
 
 			auto copyInfo = [&]()
 			{
-				EffectDepthCopy info = {
+				const EffectDepthCopy info = {
 					.Format = depthResourceDesc.texture,
 					.LastFrameIndex = effectConfig->DepthTrackingFrameIndex.fetch_add(1) + 1,
 				};
@@ -340,7 +275,7 @@ namespace ReShadeHelper
 				copyResourceDesc.usage = reshade::api::resource_usage::depth_stencil | reshade::api::resource_usage::shader_resource |
 										 reshade::api::resource_usage::copy_dest;
 
-				auto copyViewDesc = device->get_resource_view_desc({ source->m_RTVCpuDescriptors[0].ptr });
+				auto copyViewDesc = device->get_resource_view_desc({ sourceImage->m_RTVCpuDescriptors[0].ptr });
 				copyViewDesc.format = reshade::api::format_to_default_typed(copyViewDesc.format);
 
 				// We only need a texture and its shader resource view; stencils don't matter
@@ -366,20 +301,19 @@ namespace ReShadeHelper
 				reshade::api::resource_usage::copy_dest,
 				reshade::api::resource_usage::shader_resource);
 
-			// Schedule a fence signal to release old copies
-			commandList->QueuePostSubmit(
+			commandList->QueuePostSubmitCallback(
 				[device, effectRuntime, effectConfig, index = copyInfo.LastFrameIndex, view = copyInfo.ResourceView](ID3D12CommandQueue *Queue)
 				{
 					auto nativeDevice = reinterpret_cast<ID3D12Device *>(device->get_native());
 					
-					// GPU-side fence
+					// Schedule a fence signal to release old copies
 					if (!effectConfig->DepthTrackingFence)
 						nativeDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&effectConfig->DepthTrackingFence));
 
 					Queue->Signal(effectConfig->DepthTrackingFence.Get(), index);
 					const auto currentFenceIndex = effectConfig->DepthTrackingFence->GetCompletedValue();
 
-					// Update ReShade effects
+					// Tell ReShade about our new depth buffer
 					if (std::exchange(effectConfig->UpdateHint, view) != view)
 					{
 						effectRuntime->update_texture_bindings("DEPTH", view);
@@ -389,7 +323,7 @@ namespace ReShadeHelper
 							[](auto Runtime, auto Variable)
 							{
 								char source[32] = {};
-								if (Runtime->get_annotation_string_from_uniform_variable(Variable, "source", source) &&
+								if (Runtime->get_annotation_string_from_uniform_variable(Variable, "sourceImage", source) &&
 									std::strcmp(source, "bufready_depth") == 0)
 									Runtime->set_uniform_value_bool(Variable, true);
 							});
@@ -414,41 +348,39 @@ namespace ReShadeHelper
 	void (*OriginalScaleformCompositeDrawPass)(void *, void *, void *);
 	void HookedScaleformCompositeDrawPass(void *a1, void *a2, void *a3)
 	{
-		OriginalScaleformCompositeDrawPass(a1, a2, a3);
-
 		auto commandList = static_cast<ID3D12ReShadeGraphicsCommandList *>(CreationRenderer::GetRenderGraphCommandList(a2));
 		auto reshadeInterface = commandList->GetReShadeInterface();
 
-		if (!reshadeInterface)
-			return;
-
-		// Tell ReShade to render effects before this UI command list is submitted. A separate command
-		// list is required because of state tracking reasons.
-		auto effectRuntime = GetImplData<reshade::api::effect_runtime *>(reshadeInterface->get_device(), IID_ReShadeEffectRuntime);
-		auto effectConfig = GetImplData<EffectRuntimeConfiguration *>(effectRuntime, __uuidof(EffectRuntimeConfiguration));
-
-		if (effectConfig->m_DrawEffectsBeforeUI)
+		if (reshadeInterface)
 		{
-			auto renderTarget = CreationRenderer::AcquireRenderPassRenderTarget(a3, 0x6701701);
+			// Tell ReShade to render effects before this UI command list is submitted. A separate command
+			// list is required because of state tracking reasons.
+			auto effectRuntime = GetImplData<reshade::api::effect_runtime *>(reshadeInterface->get_device(), IID_ReShadeEffectRuntime);
+			auto effectConfig = GetImplData<EffectRuntimeConfiguration *>(effectRuntime, __uuidof(EffectRuntimeConfiguration));
 
-			commandList->QueuePreSubmit(
-				[effectRuntime, rtvHandle = renderTarget->m_RTVCpuDescriptors[0].ptr](reshade::api::command_list *ImmediateCommandList)
-				{
-					effectRuntime->render_effects(ImmediateCommandList, { rtvHandle });
-				});
+			if (effectConfig->m_DrawEffectsBeforeUI)
+			{
+				auto renderTarget = CreationRenderer::AcquireRenderPassIO(a3, 1);
+
+				// Reshade's effect runtime clobbers command list state but the game resets everything when drawing the
+				// scaleform pass anyway
+				effectRuntime->render_effects(reshadeInterface, { renderTarget->m_RTVCpuDescriptors[0].ptr });
+			}
 		}
+
+		OriginalScaleformCompositeDrawPass(a1, a2, a3);
 	}
 
 	DECLARE_HOOK_TRANSACTION(ReShadeHelper)
 	{
 		Hooks::WriteJump(
 			Offsets::Signature(
-				"48 89 5C 24 08 48 89 6C 24 18 48 89 74 24 20 57 41 54 41 55 41 56 41 57 48 81 EC A0 00 00 00 8B 82 40 01 00 00"),
+				"48 89 5C 24 18 55 56 57 41 55 41 56 48 8D 6C 24 F0 48 81 EC 10 01 00 00"),
 			&HookedScaleformCompositeDrawPass,
 			&OriginalScaleformCompositeDrawPass);
 
 		Hooks::WriteJump(
-			Offsets::Signature("48 89 5C 24 08 48 89 74 24 10 48 89 7C 24 18 55 48 8B EC 48 83 EC 60 48 8B CA"),
+			Offsets::Signature("48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 50 48 8B CA 49 8B D8"),
 			&HookedUpdatePreviousDepthBufferRenderPass,
 			&OriginalUpdatePreviousDepthBufferRenderPass);
 	};

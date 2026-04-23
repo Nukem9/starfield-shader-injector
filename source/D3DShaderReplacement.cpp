@@ -90,9 +90,10 @@ namespace D3DShaderReplacement
 						f.write(reinterpret_cast<const char *>(Bytecode->pShaderBytecode), Bytecode->BytecodeLength);
 
 					// Append to CSV
+					static bool firstTimeOpening = true;
 					const static auto csvPath = Plugin::ShaderDumpBinPath / "ShaderTechniqueMap.csv";
 
-					if (std::ofstream f(csvPath, std::ios::app); f.good())
+					if (std::ofstream f(csvPath, firstTimeOpening ? std::ios::out : std::ios::app); f.good())
 					{
 						char csvLine[2048];
 						auto length = sprintf_s(
@@ -106,6 +107,8 @@ namespace D3DShaderReplacement
 
 						f.write(csvLine, length);
 					}
+
+					firstTimeOpening = false;
 				}
 				fileDumpMutex.unlock();
 			}
@@ -115,7 +118,7 @@ namespace D3DShaderReplacement
 			// Replace it
 			if (std::ifstream f(shaderBinFullPath, std::ios::binary | std::ios::ate); f.good())
 			{
-				static bool once = [&]()
+				const static bool once = [&]()
 				{
 					spdlog::info("Trying to replace at least one shader: {}", shaderBinFullPath.string());
 					return true;

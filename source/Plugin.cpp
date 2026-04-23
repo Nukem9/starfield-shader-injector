@@ -110,11 +110,11 @@ extern "C" __declspec(dllexport) const SFSEPluginVersionData SFSEPlugin_Version 
 	BUILD_PROJECT_NAME,											 // Name
 	"Nukem",													 // Author
 
-	SFSEPluginVersionData::kAddressIndependence_Signatures,		 // Address independent as of 1.8.86
-	SFSEPluginVersionData::kStructureIndependence_NoStructs,     // Structure independent as 1.8.86
-																 // Compatible with 1.8.86 and beyond
+	SFSEPluginVersionData::kAddressIndependence_Signatures,		 // Address independent as of 1.16.236
+	SFSEPluginVersionData::kStructureIndependence_NoStructs,     // Structure independent as 1.16.236
+																 // Compatible with 1.16.236 and beyond
 	{
-		RUNTIME_VERSION_1_8_86,
+		RUNTIME_VERSION_1_16_236,
 		0,
 	},
 

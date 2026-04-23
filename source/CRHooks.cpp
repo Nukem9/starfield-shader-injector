@@ -98,7 +98,7 @@ namespace CRHooks
 
 	void TrackDevice(CComPtr<ID3D12Device2> Device)
 	{
-		static bool once = [&]
+		const static bool once = [&]
 		{
 			if (Plugin::AllowLiveUpdates)
 				std::thread(LiveUpdateFilesystemWatcherThread, Device).detach();
@@ -143,9 +143,13 @@ namespace CRHooks
 		ID3D12GraphicsCommandList4 *CommandList,
 		CreationRenderer::PipelineLayoutDx12 *CurrentLayout,
 		CreationRenderer::PipelineLayoutDx12 *TargetLayout,
-		CreationRenderer::TechniqueData **CurrentTech,
-		CreationRenderer::TechniqueData **TargetTech)
+		CreationRenderer::TechniqueData *CurrentTech,
+		CreationRenderer::TechniqueData *TargetTech)
 	{
+		// Nasty hack since these structures aren't actually the same
+		CurrentTech = CurrentTech ? reinterpret_cast<decltype(CurrentTech)>(reinterpret_cast<uintptr_t>(CurrentTech) + 0x8) : CurrentTech;
+		TargetTech = TargetTech ? reinterpret_cast<decltype(TargetTech)>(reinterpret_cast<uintptr_t>(TargetTech) + 0x8) : TargetTech;
+
 		//
 		// Return false when absolutely nothing has changed.
 		// Return true when a new root signature is required. The command list MUST be updated before returning.
@@ -158,14 +162,15 @@ namespace CRHooks
 		auto rootSignature = TargetLayout->m_RootSignature;
 
 		// If the target technique requires an override OR the previous technique was overridden, force a flush
-		if (auto itr = TrackedTechniqueIdToRootSignature.find((*TargetTech)->m_Id); itr != TrackedTechniqueIdToRootSignature.end())
+		if (auto itr = TargetTech ? TrackedTechniqueIdToRootSignature.find(TargetTech->m_Id) : TrackedTechniqueIdToRootSignature.end();
+			itr != TrackedTechniqueIdToRootSignature.end())
 		{
 			updateRequired = true;
 			rootSignature = itr->second.Get();
 		}
 		else if (!updateRequired && CurrentTech)
 		{
-			updateRequired = TrackedTechniqueIdToRootSignature.contains((*CurrentTech)->m_Id);
+			updateRequired = TrackedTechniqueIdToRootSignature.contains(CurrentTech->m_Id);
 		}
 
 		if (updateRequired)
@@ -199,26 +204,26 @@ namespace CRHooks
 		{
 			Xbyak::Label emulateSetNewSignature;
 
-			lea(r9, ptr[rsi + 0x8]);
-			mov(ptr[rsp + 0x20], r9);  // a5: Target Technique**
-			mov(r9, r15);			   // a4: Current Technique**
-			mov(r8, r13);			   // a3: Target PipelineLayoutDx12
-			mov(rdx, ptr[rcx + 0x18]); // a2: Current PipelineLayoutDx12
-			mov(rcx, ptr[r14 + 0x10]); // a1: ID3D12GraphicsCommandList
+			mov(ptr[rsp + 0x20], rbx); // a5: Target Technique
+			mov(r9, ptr[rcx + 0x8]);   // a4: Current Technique
+			mov(r8, r12);			   // a3: Target PipelineLayoutDx12
+			mov(rdx, ptr[rcx]);		   // a2: Current PipelineLayoutDx12
+			mov(rcx, ptr[r14 + 0x60]); // a1: ID3D12GraphicsCommandList
 			mov(rax, reinterpret_cast<uintptr_t>(&OverridePipelineLayoutDx12));
 			call(rax);
+			mov(rcx, r14);
 
 			test(al, al);
 			jnz(emulateSetNewSignature);
 
 			// Run the original code
-			mov(rax, m_TargetAddress + 0x73);
+			mov(rax, m_TargetAddress + 0x4D);
 			jmp(rax);
 
 			// New signature required. OverridePipelineLayoutDx12() is expected to pass a signature to the D3D12 API
 			// before we get here. This bypasses Starfield's calls to ID3D12CommandList::SetXXXRootSignature().
 			L(emulateSetNewSignature);
-			mov(rax, m_TargetAddress + 0x60);
+			mov(rax, m_TargetAddress + 0x3A);
 			jmp(rax);
 		}
 
@@ -230,8 +235,7 @@ namespace CRHooks
 
 	DECLARE_HOOK_TRANSACTION(CRHooks)
 	{
-		static SetPipelineLayoutDx12HookGen setPipelineLayoutDx12Hook(
-			Offsets::Signature("4C 39 69 18 74 6D 41 8B C8 83 E9 01 74 41 83 E9 01 74 29 83 F9 01 74 24 41 8B C8 83 E9 01 74 40"));
+		static SetPipelineLayoutDx12HookGen setPipelineLayoutDx12Hook(Offsets::Signature("74 4B 49 8B 04 24 49 8B 54 24 60"));
 		setPipelineLayoutDx12Hook.Patch();
 	};
 }

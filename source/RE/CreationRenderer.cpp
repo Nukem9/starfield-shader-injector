@@ -4,37 +4,34 @@ namespace CreationRenderer
 {
 	ID3D12CommandList *GetRenderGraphCommandList(void *RenderGraphData)
 	{
-		auto addr = Offsets::Signature("48 83 EC 28 48 8B 89 38 01 00 00 33 C0 48 85 C9 74 05 E8");
-		auto func = reinterpret_cast<decltype(&GetRenderGraphCommandList)>(addr.operator size_t());
+		auto addr = Offsets::Signature("48 89 5C 24 10 48 89 74 24 18 57 48 83 EC 20 48 8B 99 38 01 00 00");
+		auto func = reinterpret_cast<void *(*)(void *)>(addr.operator size_t());
 
-		return *reinterpret_cast<ID3D12CommandList **>(reinterpret_cast<uintptr_t>(func(RenderGraphData)) + 0x10);
+		return *reinterpret_cast<ID3D12CommandList **>(reinterpret_cast<uintptr_t>(func(RenderGraphData)) + 0x60);
 	}
 
-	Dx12Unknown *AcquireRenderPassRenderTarget(void *RenderPassData, uint32_t RenderTargetId)
+	Dx12Unknown *AcquireRenderPassIO(void *RenderPassData, uint32_t IOIndex)
 	{
-		// Leads to a call instruction
-		auto addr = Offsets::Signature("E8 ? ? ? ? 48 8B 0D ? ? ? ? 48 8B D8 8B ? F0 00 00 00 48 89 84 24 ? 00 00 00").operator size_t();
-		addr = addr + *reinterpret_cast<int *>(addr + 1) + 5;
-		auto func = reinterpret_cast<decltype(&AcquireRenderPassRenderTarget)>(addr);
+		auto addr = Offsets::Signature("48 83 EC 08 8B 41 08 4C 8B D2 85 C0 0F 84 89 00 00 00 48 89 74 24 18");
+		auto func = reinterpret_cast<Dx12Unknown *(*)(uint64_t, void *)>(addr.operator size_t());
 
-		return func(RenderPassData, RenderTargetId);
-	}
+		auto v19 = *(uint64_t *)RenderPassData + 16LL;
+		if (*(int *)(*(uint64_t *)RenderPassData + 8LL) >= 0)
+			v19 = *(uint64_t *)v19;
 
-	Dx12Unknown *AcquireRenderPassSingleInput(void *RenderPassData)
-	{
-		auto addr = Offsets::Signature("48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 48 89 7C 24 20 48 8B 01 48 8B 79 08 83 78 08 00 48 8D "
-									   "48 10 7C 03 48 8B 09 44 8B 59 24 8B 41 20 8B 5F 08");
-		auto func = reinterpret_cast<decltype(&AcquireRenderPassSingleInput)>(addr.operator size_t());
+		auto v20 = *(uint64_t *)((uint64_t)RenderPassData + 8);
+		auto v21 = (uint64_t)*(uint32_t *)(v19 + 4 + (IOIndex * 32)) << 32;
 
-		return func(RenderPassData);
-	}
+		struct
+		{
+			uint64_t arg0;
+			uint64_t arg1;
+		} tempdata =
+		{
+			.arg0 = *(uint32_t *)(v19 + (IOIndex * 32)) | v21,
+			.arg1 = *(uint32_t *)(v19 + 8 + (IOIndex * 32)),
+		};
 
-	Dx12Unknown *AcquireRenderPassSingleOutput(void *RenderPassData)
-	{
-		auto addr = Offsets::Signature("48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 48 89 7C 24 20 48 8B 01 48 8B 79 08 83 78 08 00 48 8D "
-									   "48 10 7C 03 48 8B 09 44 8B 59 04 8B 01 8B 5F 08");
-		auto func = reinterpret_cast<decltype(&AcquireRenderPassSingleOutput)>(addr.operator size_t());
-
-		return func(RenderPassData);
+		return func(v20, &tempdata);
 	}
 }
